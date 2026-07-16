@@ -1,103 +1,287 @@
 package com.example.findit.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import com.example.findit.navigation.BottomNavTab
 import com.example.findit.ui.components.FindItBottomBar
-import com.example.findit.ui.theme.gradientStartColor
+import com.example.findit.ui.components.FindItNavigationDrawerContent
 import com.example.findit.viewmodel.ItemViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+private const val NAV_IDLE_HIDE_MS = 4_000L
 
 @Composable
 fun MainScreen(
     viewModel: ItemViewModel,
     onItemClick: (Long) -> Unit,
-    isDarkTheme: Boolean,
-    onDarkThemeChanged: (Boolean) -> Unit,
+    themeMode: com.example.findit.ui.theme.ThemeMode = com.example.findit.ui.theme.ThemeMode.Auto,
+    onThemeModeChanged: (com.example.findit.ui.theme.ThemeMode) -> Unit = {},
     profileImageUri: String = "",
     onProfileImageChanged: (String) -> Unit = {},
-    displayName: String = "FindIt User",
-    username: String = "findit_user",
+    displayName: String = "IRemember User",
+    username: String = "iremember_user",
     bio: String = "Keeping everyday essentials organized and easy to find.",
-    onProfileDetailsChanged: (String, String, String) -> Unit = { _, _, _ -> },
+    fullName: String = "",
+    birthday: String = "",
+    family: String = "",
+    phone: String = "",
+    location: String = "",
+    onProfileDetailsChanged: (ProfileDetailsUpdate) -> Unit = {},
+    onChangePassword: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(BottomNavTab.Home) }
+    var bottomNavVisible by rememberSaveable { mutableStateOf(true) }
+    var lastInteraction by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = gradientStartColor(),
-        bottomBar = {
-            FindItBottomBar(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
-            )
+    fun onUserInteraction() {
+        lastInteraction = System.currentTimeMillis()
+        bottomNavVisible = true
+    }
+
+    fun closeDrawerThen(action: () -> Unit) {
+        scope.launch {
+            drawerState.close()
+            action()
         }
-    ) { innerPadding ->
-        AnimatedContent(
-            targetState = selectedTab,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 80.dp),
-            transitionSpec = {
-                (fadeIn(tween(300)) + slideInHorizontally(tween(300)) { if (targetState.ordinal > initialState.ordinal) it else -it })
-                    .togetherWith(fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { if (targetState.ordinal > initialState.ordinal) -it else it })
-            },
-            label = "bottom_nav_content"
-        ) { tab ->
-            when (tab) {
-                BottomNavTab.Home -> HomeScreen(
-                    viewModel = viewModel,
-                    onSearchClick = { selectedTab = BottomNavTab.Search },
-                    onItemClick = onItemClick,
-                    embedded = true,
-                    onAddItemClick = { selectedTab = BottomNavTab.AddItem },
-                    onProfileClick = { selectedTab = BottomNavTab.Profile },
-                    profileImageUri = profileImageUri,
+    }
+
+    LaunchedEffect(selectedTab, lastInteraction) {
+        bottomNavVisible = true
+        delay(NAV_IDLE_HIDE_MS)
+        bottomNavVisible = false
+    }
+
+    BackHandler(enabled = drawerState.isOpen) {
+        scope.launch { drawerState.close() }
+    }
+
+    BackHandler(enabled = !drawerState.isOpen && selectedTab != BottomNavTab.Home) {
+        selectedTab = BottomNavTab.Home
+        onUserInteraction()
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = true,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = Color.Transparent,
+                drawerContentColor = Color.Unspecified
+            ) {
+                FindItNavigationDrawerContent(
                     displayName = displayName,
                     username = username,
-                    onNotificationsClick = {},
-                    onSettingsClick = { selectedTab = BottomNavTab.Profile },
-                    onLocationClick = { loc ->
-                        viewModel.updateSearchQuery(loc)
-                        selectedTab = BottomNavTab.Search
+                    profileImageUri = profileImageUri,
+                    onHome = {
+                        onUserInteraction()
+                        closeDrawerThen { selectedTab = BottomNavTab.Home }
+                    },
+                    onSearch = {
+                        onUserInteraction()
+                        closeDrawerThen { selectedTab = BottomNavTab.Search }
+                    },
+                    onAddItem = {
+                        onUserInteraction()
+                        closeDrawerThen { selectedTab = BottomNavTab.AddItem }
+                    },
+                    onAlerts = {
+                        onUserInteraction()
+                        closeDrawerThen { selectedTab = BottomNavTab.Alerts }
+                    },
+                    onNews = {
+                        onUserInteraction()
+                        closeDrawerThen { onNotificationsClick() }
+                    },
+                    onProfile = {
+                        onUserInteraction()
+                        closeDrawerThen { selectedTab = BottomNavTab.Profile }
+                    },
+                    onSignOut = {
+                        closeDrawerThen(onLogout)
                     }
                 )
-                BottomNavTab.Search -> SearchScreen(
-                    viewModel = viewModel,
-                    onItemClick = onItemClick,
-                    embedded = true
-                )
-                BottomNavTab.AddItem -> AddItemScreen(
-                    viewModel = viewModel,
-                    embedded = true,
-                    onSaveSuccess = { selectedTab = BottomNavTab.Home }
-                )
-                BottomNavTab.Profile -> ProfileScreen(
-                    viewModel = viewModel,
-                    isDarkTheme = isDarkTheme,
-                    onDarkThemeChanged = onDarkThemeChanged,
-                    profileImageUri = profileImageUri,
-                    onProfileImageChanged = onProfileImageChanged,
-                    displayName = displayName,
-                    username = username,
-                    bio = bio,
-                    onProfileDetailsChanged = onProfileDetailsChanged,
-                    onLogout = onLogout
+            }
+        }
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            AnimatedContent(
+                targetState = selectedTab,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures { onUserInteraction() }
+                    },
+                transitionSpec = {
+                    (fadeIn(tween(300)) + slideInHorizontally(tween(300)) {
+                        if (targetState.ordinal > initialState.ordinal) it else -it
+                    })
+                        .togetherWith(
+                            fadeOut(tween(300)) + slideOutHorizontally(tween(300)) {
+                                if (targetState.ordinal > initialState.ordinal) -it else it
+                            }
+                        )
+                },
+                label = "bottom_nav_content"
+            ) { tab ->
+                when (tab) {
+                    BottomNavTab.Home -> HomeScreen(
+                        viewModel = viewModel,
+                        onSearchClick = {
+                            onUserInteraction()
+                            selectedTab = BottomNavTab.Search
+                        },
+                        onItemClick = onItemClick,
+                        embedded = true,
+                        onAddItemClick = {
+                            onUserInteraction()
+                            selectedTab = BottomNavTab.AddItem
+                        },
+                        onProfileClick = {
+                            onUserInteraction()
+                            selectedTab = BottomNavTab.Profile
+                        },
+                        onMenuClick = {
+                            onUserInteraction()
+                            scope.launch { drawerState.open() }
+                        },
+                        themeMode = themeMode,
+                        onThemeModeChanged = onThemeModeChanged,
+                        profileImageUri = profileImageUri,
+                        displayName = displayName,
+                        username = username,
+                        onNotificationsClick = {
+                            onUserInteraction()
+                            onNotificationsClick()
+                        },
+                        onAlertsClick = {
+                            onUserInteraction()
+                            selectedTab = BottomNavTab.Alerts
+                        },
+                        onLocationClick = { loc ->
+                            onUserInteraction()
+                            viewModel.updateSearchQuery(loc)
+                            selectedTab = BottomNavTab.Search
+                        },
+                        onUserInteraction = ::onUserInteraction,
+                        bottomNavVisible = bottomNavVisible
+                    )
+                    BottomNavTab.Search -> SearchScreen(
+                        viewModel = viewModel,
+                        onItemClick = onItemClick,
+                        embedded = true,
+                        onMenuClick = {
+                            onUserInteraction()
+                            scope.launch { drawerState.open() }
+                        },
+                        onUserInteraction = ::onUserInteraction,
+                        bottomNavVisible = bottomNavVisible
+                    )
+                    BottomNavTab.AddItem -> AddItemScreen(
+                        viewModel = viewModel,
+                        embedded = true,
+                        onSaveSuccess = {
+                            onUserInteraction()
+                            selectedTab = BottomNavTab.Home
+                        },
+                        onMenuClick = {
+                            onUserInteraction()
+                            scope.launch { drawerState.open() }
+                        },
+                        onUserInteraction = ::onUserInteraction,
+                        bottomNavVisible = bottomNavVisible
+                    )
+                    BottomNavTab.Alerts -> AlertsScreen(
+                        viewModel = viewModel,
+                        onItemClick = onItemClick,
+                        onMenuClick = {
+                            onUserInteraction()
+                            scope.launch { drawerState.open() }
+                        },
+                        onUserInteraction = ::onUserInteraction,
+                        bottomNavVisible = bottomNavVisible
+                    )
+                    BottomNavTab.Profile -> ProfileScreen(
+                        viewModel = viewModel,
+                        themeMode = themeMode,
+                        onThemeModeChanged = onThemeModeChanged,
+                        profileImageUri = profileImageUri,
+                        onProfileImageChanged = onProfileImageChanged,
+                        displayName = displayName,
+                        username = username,
+                        bio = bio,
+                        fullName = fullName,
+                        birthday = birthday,
+                        family = family,
+                        phone = phone,
+                        location = location,
+                        onProfileDetailsChanged = onProfileDetailsChanged,
+                        onChangePassword = {
+                            onUserInteraction()
+                            onChangePassword()
+                        },
+                        onLogout = onLogout,
+                        onMenuClick = {
+                            onUserInteraction()
+                            scope.launch { drawerState.open() }
+                        },
+                        onUserInteraction = ::onUserInteraction,
+                        bottomNavVisible = bottomNavVisible
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = bottomNavVisible,
+                modifier = Modifier.align(Alignment.BottomCenter),
+                enter = slideInVertically(animationSpec = tween(250)) { it } + fadeIn(tween(250)),
+                exit = slideOutVertically(animationSpec = tween(250)) { it } + fadeOut(tween(250))
+            ) {
+                FindItBottomBar(
+                    selectedTab = selectedTab,
+                    onTabSelected = { tab ->
+                        onUserInteraction()
+                        selectedTab = tab
+                    }
                 )
             }
         }

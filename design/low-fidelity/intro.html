@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=390, initial-scale=1.0" />
+  <title>FindIt — Lo-Fi Wireframe: Intro / Splash</title>
+  <link rel="stylesheet" href="wireframe.css" />
+  <style>
+    /* Intro-specific layout (SplashScreen.kt) */
+    .splash-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 24px 56px;
+    }
+
+    /* Logo placeholder — 132dp in app */
+    .logo-box {
+      width: 132px;
+      height: 132px;
+      border-radius: 8px;
+    }
+
+    .slogan {
+      margin-top: 16px;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+    }
+
+    .annotation {
+      margin-top: 32px;
+      padding: 8px 12px;
+      border: 1px solid var(--wf-border-light);
+      background: #f0f0f0;
+      font-size: 10px;
+      color: var(--wf-muted);
+      line-height: 1.4;
+      max-width: 280px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    Figma: html.to.design @ 390px, Light
+    Screen: Splash / Intro (app open)
+    Ref: SplashScreen.kt
+  -->
+  <div class="screen">
+    <span class="screen-label">Intro</span>
+
+    <div class="status-bar">
+      <span>9:41</span>
+      <span class="status-icons">
+        <span>[signal]</span>
+        <span>[wifi]</span>
+        <span>[bat]</span>
+      </span>
+    </div>
+
+    <main class="splash-content">
+
+      <div class="placeholder-box logo-box">Logo<br />132 × 132</div>
+
+      <p class="wf-text wf-text--muted slogan">Never lose track again</p>
+
+      <p class="annotation">
+        Auto-navigate after ~2.2s → Login / Main / PIN unlock
+      </p>
+
+    </main>
+
+    <div class="system-nav" aria-hidden="true"></div>
+  </div>
+
+</body>
+</html>

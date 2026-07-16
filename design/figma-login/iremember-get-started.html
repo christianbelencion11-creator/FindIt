@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=390, initial-scale=1.0" />
+  <title>IRemember — Get Started</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* IRemember — Get Started
+       Viewport: 390 × 844 · Theme: Light
+       Paste this ENTIRE file into Figma html.to.design */
+
+    :root {
+      --primary: #16a34a;
+      --primary-deep: #064e3b;
+      --primary-light: #ddfce8;
+      --gradient-start: #064e3b;
+      --gradient-end: #22c55e;
+      --bg: #ffffff;
+      --text: #102015;
+      --text-muted: #66756a;
+      --divider: #e5ede7;
+      --border: #d9e7dc;
+      --nav-bar: #000000;
+      --screen-width: 390px;
+      --screen-height: 844px;
+      --radius-btn: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e8e8e8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .screen {
+      width: var(--screen-width);
+      height: var(--screen-height);
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 20px 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      pointer-events: none;
+    }
+
+    .status-icons { display: flex; gap: 6px; font-size: 12px; }
+
+    /* ===== Wave header ===== */
+    .header {
+      position: relative;
+      height: 156px;
+      flex-shrink: 0;
+    }
+
+    .header-wave {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .header-branding {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 44px 20px 0;
+    }
+
+    .brand-text h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 34px;
+    }
+
+    .brand-text p {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+      margin-top: 2px;
+    }
+
+    .brand-mascot {
+      width: 84px;
+      height: 84px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    /* Fallback mascot circle if image missing in Figma */
+    .brand-mascot-fallback {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-mascot-fallback svg {
+      width: 40px;
+      height: 40px;
+      fill: #fff;
+    }
+
+    /* ===== Body ===== */
+    .content {
+      flex: 1;
+      padding: 8px 20px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .hero-wrap {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .hero-glow {
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(221, 252, 232, 0.95) 0%, transparent 70%);
+    }
+
+    .hero-art {
+      position: relative;
+      z-index: 1;
+      width: 260px;
+      height: 180px;
+    }
+
+    .headline {
+      margin-top: 12px;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+      line-height: 28px;
+    }
+
+    .subcopy {
+      margin-top: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 20px;
+      max-width: 320px;
+    }
+
+    /* Features */
+    .features {
+      display: flex;
+      width: 100%;
+      gap: 8px;
+    }
+
+    .feature {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .feature-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--primary);
+    }
+
+    .feature-title {
+      margin-top: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 20px;
+    }
+
+    .feature-sub {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 14px;
+    }
+
+    .cta-block {
+      width: 100%;
+      margin-top: 24px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      height: 52px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .or-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      margin: 12px 0;
+    }
+
+    .or-row .line {
+      flex: 1;
+      height: 1px;
+      background: var(--divider);
+    }
+
+    .or-row span {
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .btn-outline {
+      width: 100%;
+      height: 52px;
+      background: #fff;
+      color: var(--text);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .nav-bar {
+      height: 40px;
+      background: var(--nav-bar);
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    Figma import (html.to.design):
+      Viewport: 390 px
+      Theme:    Light
+    Frame size: 390 × 844 px
+
+    Screen: Get Started (first launch)
+  -->
+  <div class="screen">
+
+    <div class="status-bar" aria-hidden="true">
+      <span>7:45</span>
+      <span class="status-icons">
+        <span>●●●●</span>
+        <span>WiFi</span>
+        <span>86%</span>
+      </span>
+    </div>
+
+    <header class="header">
+      <svg class="header-wave" viewBox="0 0 390 156" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="headerGrad" x1="0" y1="0" x2="390" y2="156" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#064E3B"/>
+            <stop offset="100%" stop-color="#22C55E"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#headerGrad)" d="M0,0 L390,0 L390,125 C304,153 218,131 187,115 C117,90 78,122 0,109 Z"/>
+        <circle cx="58" cy="36" r="32" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <circle cx="128" cy="48" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <circle cx="198" cy="36" r="32" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <circle cx="268" cy="48" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      </svg>
+      <div class="header-branding">
+        <div class="brand-text">
+          <h1>IRemember</h1>
+          <p>Never lose track again</p>
+        </div>
+        <!-- Use mascot if available; SVG circle works for Figma without assets -->
+        <div class="brand-mascot-fallback" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <div class="hero-wrap">
+        <div class="hero-glow"></div>
+        <!-- Inline hero: box + backpack + floating items (no external image needed) -->
+        <svg class="hero-art" viewBox="0 0 260 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Box -->
+          <rect x="70" y="95" width="120" height="70" rx="8" fill="#16a34a"/>
+          <path d="M70 95 L100 70 L160 70 L190 95 Z" fill="#22c55e"/>
+          <path d="M100 70 L100 95 L70 95" fill="#047857" opacity="0.35"/>
+          <path d="M160 70 L160 95 L190 95" fill="#064e3b" opacity="0.25"/>
+          <!-- Backpack in box -->
+          <rect x="108" y="100" width="44" height="48" rx="8" fill="#0d7a3f"/>
+          <rect x="118" y="92" width="24" height="12" rx="4" fill="#22c55e"/>
+          <circle cx="130" cy="122" r="6" fill="#ddfce8"/>
+          <!-- Keys -->
+          <g transform="translate(42,48)">
+            <circle cx="10" cy="10" r="8" fill="none" stroke="#94a3b8" stroke-width="3"/>
+            <rect x="16" y="8" width="22" height="5" rx="2" fill="#94a3b8"/>
+            <rect x="32" y="8" width="3" height="10" rx="1" fill="#94a3b8"/>
+            <rect x="28" y="8" width="3" height="8" rx="1" fill="#94a3b8"/>
+          </g>
+          <!-- Phone -->
+          <rect x="188" y="40" width="34" height="56" rx="6" fill="#1f2937"/>
+          <rect x="192" y="46" width="26" height="40" rx="2" fill="#e5e7eb"/>
+          <circle cx="205" cy="90" r="2" fill="#9ca3af"/>
+          <!-- Wallet -->
+          <rect x="55" y="118" width="40" height="28" rx="4" fill="#92400e"/>
+          <rect x="55" y="118" width="40" height="10" rx="4" fill="#b45309"/>
+        </svg>
+      </div>
+
+      <h2 class="headline">Let's begin tracking items</h2>
+      <p class="subcopy">Keep track of your important items so you'll never lose them again.</p>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+          </div>
+          <div class="feature-title">Secure</div>
+          <div class="feature-sub">Your data is safe and protected</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+          </div>
+          <div class="feature-title">Reminders</div>
+          <div class="feature-sub">Get notified when needed</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          </div>
+          <div class="feature-title">Easy Search</div>
+          <div class="feature-sub">Find your items in seconds</div>
+        </div>
+      </div>
+
+      <div class="cta-block">
+        <button class="btn-primary" type="button">Create New Account</button>
+        <div class="or-row">
+          <div class="line"></div>
+          <span>or</span>
+          <div class="line"></div>
+        </div>
+        <button class="btn-outline" type="button">I Already Have an Account</button>
+      </div>
+
+    </div>
+
+    <div class="nav-bar" aria-hidden="true"></div>
+
+  </div>
+
+</body>
+</html>

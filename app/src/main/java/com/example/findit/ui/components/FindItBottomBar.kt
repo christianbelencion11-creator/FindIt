@@ -2,7 +2,6 @@ package com.example.findit.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -26,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -38,11 +38,12 @@ private data class BottomNavItem(
     val icon: ImageVector
 )
 
+/** Classic floating pill: Home · Search · Add · Profile (Alerts via drawer). */
 private val bottomNavItems = listOf(
-    BottomNavItem(BottomNavTab.Home,    "Home",     Icons.Default.Home),
-    BottomNavItem(BottomNavTab.Search,  "Search",   Icons.Default.Search),
+    BottomNavItem(BottomNavTab.Home, "Home", Icons.Default.Home),
+    BottomNavItem(BottomNavTab.Search, "Search", Icons.Default.Search),
     BottomNavItem(BottomNavTab.AddItem, "Add Item", Icons.Default.Add),
-    BottomNavItem(BottomNavTab.Profile, "Profile",  Icons.Default.Person)
+    BottomNavItem(BottomNavTab.Profile, "Profile", Icons.Default.Person)
 )
 
 @Composable
@@ -50,16 +51,16 @@ fun FindItBottomBar(
     selectedTab: BottomNavTab,
     onTabSelected: (BottomNavTab) -> Unit
 ) {
-    val isDarkTheme = isSystemInDarkTheme()
-    val barColor = if (isDarkTheme) Color(0xFF3A6847) else MaterialTheme.colorScheme.surface
-    val selectedContainerColor =
-        if (isDarkTheme) Color(0xFF4F805E) else MaterialTheme.colorScheme.primaryContainer
+    val scheme = MaterialTheme.colorScheme
+    // Follow app ThemeMode via MaterialTheme — not system dark alone.
+    val isDark = scheme.background.luminance() < 0.5f
+    val barColor = scheme.surface
+    val selectedContainerColor = scheme.primaryContainer
     val inactiveCircleColor =
-        if (isDarkTheme) Color.White.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceVariant
-    val inactiveIconColor =
-        if (isDarkTheme) Color.White.copy(alpha = 0.88f) else MaterialTheme.colorScheme.onSurfaceVariant
+        if (isDark) Color.White.copy(alpha = 0.16f) else scheme.surfaceVariant
+    val inactiveIconColor = scheme.onSurfaceVariant
     val selectedLabelColor =
-        if (isDarkTheme) Color.White else MaterialTheme.colorScheme.primary
+        if (isDark) scheme.onSurface else scheme.primary
 
     Box(
         modifier = Modifier
@@ -72,8 +73,8 @@ fun FindItBottomBar(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(32.dp),
             color = barColor,
-            tonalElevation = 4.dp,
-            shadowElevation = 16.dp
+            tonalElevation = if (isDark) 3.dp else 2.dp,
+            shadowElevation = if (isDark) 12.dp else 10.dp
         ) {
             Row(
                 modifier = Modifier
@@ -84,7 +85,7 @@ fun FindItBottomBar(
             ) {
                 bottomNavItems.forEach { item ->
                     val selected = selectedTab == item.tab
-                    val activeColor = MaterialTheme.colorScheme.primary
+                    val activeColor = scheme.primary
 
                     Row(
                         modifier = Modifier
@@ -112,8 +113,11 @@ fun FindItBottomBar(
                             Icon(
                                 imageVector = item.icon,
                                 contentDescription = item.label,
-                                tint = if (selected) MaterialTheme.colorScheme.onPrimary
-                                       else inactiveIconColor,
+                                tint = if (selected) {
+                                    scheme.onPrimary
+                                } else {
+                                    inactiveIconColor
+                                },
                                 modifier = Modifier.size(19.dp)
                             )
                         }

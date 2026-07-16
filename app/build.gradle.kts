@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -32,8 +33,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        }
     }
     buildFeatures {
         compose = true
@@ -58,6 +61,16 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.security.crypto)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.functions)
+    implementation(libs.firebase.firestore)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.googleid)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -65,4 +78,33 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+tasks.register("verifyGoogleServices") {
+    doLast {
+        val config = file("google-services.json")
+        if (!config.exists()) {
+            logger.warn(
+                "google-services.json not found. Copy from Firebase Console — see FIREBASE_SETUP.md"
+            )
+            return@doLast
+        }
+        val content = config.readText()
+        if (content.contains(Regex("\"oauth_client\"\\s*:\\s*\\[\\s*\\]"))) {
+            logger.warn(
+                """
+                |
+                | google-services.json has an empty oauth_client array — Google Sign-In will not work.
+                | 1. Firebase Console → Authentication → Sign-in method → Enable Google + Email/Password
+                | 2. Project settings → Android app → Add SHA-1 (see FIREBASE_SETUP.md)
+                | 3. Re-download google-services.json and replace app/google-services.json
+                |
+                """.trimMargin()
+            )
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("verifyGoogleServices")
 }

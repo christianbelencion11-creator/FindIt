@@ -4,10 +4,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -24,7 +27,8 @@ fun FindItSearchBar(
     modifier: Modifier = Modifier,
     placeholder: String = "Search items...",
     readOnly: Boolean = false,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    onFilterClick: (() -> Unit)? = null
 ) {
     Box(
         modifier = modifier
@@ -49,18 +53,32 @@ fun FindItSearchBar(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
+            trailingIcon = if (onFilterClick != null) {
+                {
+                    IconButton(onClick = onFilterClick) {
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Filter",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+            } else {
+                null
+            },
             readOnly = readOnly || onClick != null,
             enabled = onClick == null,
             singleLine = true,
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor    = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor  = MaterialTheme.colorScheme.surface,
-                disabledContainerColor   = MaterialTheme.colorScheme.surface,
-                disabledTextColor        = MaterialTheme.colorScheme.onSurface,
-                disabledBorderColor      = MaterialTheme.colorScheme.outline,
-                focusedBorderColor       = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor     = MaterialTheme.colorScheme.outline
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                disabledContainerColor = MaterialTheme.colorScheme.surface,
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline
             )
         )
     }
@@ -73,7 +91,8 @@ fun FindItSearchBarOverlay(
     modifier: Modifier = Modifier,
     placeholder: String = "Search items...",
     readOnly: Boolean = false,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    onFilterClick: (() -> Unit)? = null
 ) {
     FindItSearchBar(
         query = query,
@@ -81,6 +100,7 @@ fun FindItSearchBarOverlay(
         modifier = modifier.padding(top = Spacing.sm),
         placeholder = placeholder,
         readOnly = readOnly,
-        onClick = onClick
+        onClick = onClick,
+        onFilterClick = onFilterClick
     )
 }

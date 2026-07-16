@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=390, initial-scale=1.0" />
+  <title>FindIt — Found It Success</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* FindIt — "You found it!" success alert (after confirming)
+       Viewport: 390 × 844 px · Theme: Light
+       Matches Android: FoundSuccessDialog.kt over ItemDetailScreen.kt */
+
+    :root {
+      --primary: #16a34a;
+      --primary-deep: #064e3b;
+      --primary-light: #ddfce8;
+      --success-ring: rgba(22, 163, 74, 0.14);
+      --gradient-start: #064e3b;
+      --gradient-end: #22c55e;
+      --bg: #f7fbf6;
+      --surface: #ffffff;
+      --text: #102015;
+      --text-muted: #66756a;
+      --nav-bar: #000000;
+
+      --spacing-xxs: 2px;
+      --spacing-sm: 8px;
+      --spacing-md: 12px;
+      --spacing-lg: 16px;
+      --spacing-xl: 20px;
+      --spacing-xxl: 24px;
+
+      --radius-card: 20px;
+      --radius-btn: 14px;
+      --screen-width: 390px;
+      --screen-height: 844px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e8e8e8;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .screen {
+      width: var(--screen-width);
+      height: var(--screen-height);
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Background: Item Detail (dimmed) ── */
+    .status-bar {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 5;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 20px 0; font-size: 14px; font-weight: 500; color: #fff;
+      pointer-events: none;
+    }
+
+    .header {
+      height: 160px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    }
+
+    .header-row {
+      display: flex; align-items: center; gap: var(--spacing-md);
+      padding: 56px var(--spacing-xl) 0;
+    }
+
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 50%; border: none;
+      background: rgba(255,255,255,0.14); color: #fff;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .back-btn svg { width: 22px; height: 22px; fill: currentColor; }
+
+    .item-thumb {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: linear-gradient(135deg, #16a34a, #047857);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .item-thumb svg { width: 26px; height: 26px; fill: #fff; }
+
+    .header-titles { flex: 1; min-width: 0; }
+    .header-titles h1 {
+      font-size: 24px; font-weight: 700; color: #fff; line-height: 32px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .header-titles p { font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+
+    .body-card {
+      flex: 1; background: var(--bg);
+      border-top-left-radius: 28px; border-top-right-radius: 28px;
+      margin-top: -28px; position: relative; z-index: 2;
+      display: flex; flex-direction: column;
+    }
+
+    .body-scroll {
+      flex: 1; padding: var(--spacing-md) var(--spacing-xl);
+      display: flex; flex-direction: column; gap: var(--spacing-md);
+    }
+
+    .location-hero {
+      display: flex; align-items: center; gap: var(--spacing-md);
+      background: var(--primary-light); border-radius: var(--radius-card);
+      padding: var(--spacing-md) var(--spacing-lg);
+    }
+
+    .location-hero-icon {
+      width: 44px; height: 44px; border-radius: 12px; background: var(--primary);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .location-hero-icon svg { width: 24px; height: 24px; fill: #fff; }
+
+    .location-hero-label { font-size: 12px; font-weight: 500; color: rgba(6,78,59,0.7); }
+    .location-hero-value { font-size: 16px; font-weight: 600; color: var(--primary-deep); margin-top: 2px; }
+
+    .details-card {
+      background: var(--surface); border-radius: var(--radius-card);
+      padding: var(--spacing-xl); display: flex; flex-direction: column; gap: var(--spacing-lg);
+      box-shadow: 0 1px 3px rgba(6,78,59,0.08);
+    }
+
+    .detail-row { display: flex; align-items: flex-start; gap: var(--spacing-md); }
+    .detail-row svg { width: 22px; height: 22px; fill: var(--primary); flex-shrink: 0; }
+    .detail-label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+    .detail-value { font-size: 16px; color: var(--text); margin-top: 2px; }
+    .divider { height: 1px; background: rgba(22,163,74,0.08); }
+
+    .action-bar {
+      background: var(--bg); padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-xl);
+      flex-shrink: 0;
+    }
+
+    .btn-found {
+      width: 100%; height: 52px; background: var(--primary); color: #fff;
+      border: none; border-radius: var(--radius-btn); font-family: inherit;
+      font-size: 15px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: var(--spacing-sm);
+    }
+    .btn-found svg { width: 20px; height: 20px; fill: currentColor; }
+
+    .nav-bar { height: 48px; background: var(--nav-bar); flex-shrink: 0; }
+
+    /* ── Scrim + Success alert dialog ── */
+    .scrim {
+      position: absolute; inset: 0; z-index: 20;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 var(--spacing-xl);
+    }
+
+    .success-dialog {
+      width: 100%;
+      background: var(--surface);
+      border-radius: var(--radius-card);
+      padding: var(--spacing-xxl);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    .success-icon-wrap {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: var(--success-ring);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .success-icon-inner {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .success-icon-inner svg {
+      width: 36px; height: 36px; fill: #fff;
+    }
+
+    .success-title {
+      margin-top: var(--spacing-lg);
+      font-size: 22px; font-weight: 700; color: var(--text);
+      text-align: center; line-height: 28px;
+    }
+
+    .success-item-name {
+      margin-top: var(--spacing-sm);
+      font-size: 20px; font-weight: 600; color: var(--primary);
+      text-align: center; line-height: 28px;
+    }
+
+    .success-sublabel {
+      margin-top: var(--spacing-md);
+      font-size: 14px; color: var(--text-muted);
+      text-align: center; line-height: 20px;
+    }
+
+    .success-location {
+      margin-top: var(--spacing-xxs);
+      font-size: 16px; font-weight: 600; color: var(--text);
+      text-align: center; line-height: 24px;
+    }
+
+    .success-footnote {
+      margin-top: var(--spacing-sm);
+      font-size: 12px; color: rgba(102, 117, 106, 0.85);
+      text-align: center; line-height: 18px;
+    }
+
+    .btn-done {
+      margin-top: var(--spacing-xxl);
+      width: 100%; height: 52px;
+      background: var(--primary); color: #fff;
+      border: none; border-radius: var(--radius-btn);
+      font-family: inherit; font-size: 15px; font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-find-another {
+      margin-top: var(--spacing-sm);
+      width: 100%; height: 44px;
+      background: transparent; border: none;
+      font-family: inherit; font-size: 14px; font-weight: 500;
+      color: var(--primary); cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    Figma import (html.to.design):
+      Viewport: 390 px
+      Theme:    Light
+    Frame size: 390 × 844 px
+
+    Screen: Item Detail + "You found it!" success alert
+  -->
+  <div class="screen">
+
+    <div class="status-bar" aria-hidden="true">
+      <span>9:26</span>
+      <span>●●●● WiFi 84%</span>
+    </div>
+
+    <header class="header">
+      <div class="header-row">
+        <button class="back-btn" type="button" aria-label="Back">
+          <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </button>
+        <div class="item-thumb">
+          <svg viewBox="0 0 24 24"><path d="M21 10h-8.35A5.99 5.99 0 0 0 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6a5.99 5.99 0 0 0 5.65-4H13l2 2 2-2 2 2 4-4.04L21 10zM7 15c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z"/></svg>
+        </div>
+        <div class="header-titles">
+          <h1>House Keys</h1>
+          <p>Keys</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="body-card">
+      <div class="body-scroll">
+        <div class="location-hero">
+          <div class="location-hero-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          </div>
+          <div>
+            <div class="location-hero-label">Look here</div>
+            <div class="location-hero-value">Kitchen drawer</div>
+          </div>
+        </div>
+
+        <div class="details-card">
+          <div class="detail-row">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            <div>
+              <div class="detail-label">Location</div>
+              <div class="detail-value">Kitchen drawer</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="detail-row">
+            <svg viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11L12 2zm0 3.84L13.93 9h-3.87L12 5.84zM17.5 13c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5-2.01-4.5-4.5-4.5zm0 7c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5zM3 21.5h8v-8H3v8zm2-6h4v4H5v-4z"/></svg>
+            <div>
+              <div class="detail-label">Category</div>
+              <div class="detail-value">Keys</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn-found" type="button">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          I Found It!
+        </button>
+      </div>
+    </div>
+
+    <!-- Success alert after confirming "Did you find it?" -->
+    <div class="scrim">
+      <div class="success-dialog" role="alertdialog" aria-labelledby="success-title">
+        <div class="success-icon-wrap">
+          <div class="success-icon-inner">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            </svg>
+          </div>
+        </div>
+
+        <h2 class="success-title" id="success-title">You found it!</h2>
+        <p class="success-item-name">House Keys</p>
+
+        <p class="success-sublabel">It was saved in:</p>
+        <p class="success-location">Kitchen drawer</p>
+
+        <p class="success-footnote">One less thing to worry about.</p>
+
+        <button class="btn-done" type="button">Done</button>
+        <button class="btn-find-another" type="button">Find another item</button>
+      </div>
+    </div>
+
+    <div class="nav-bar" aria-hidden="true"></div>
+
+  </div>
+
+</body>
+</html>

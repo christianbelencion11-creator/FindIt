@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=390, initial-scale=1.0" />
+  <title>IRemember — Onboard 3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /*
+      IRemember — Onboarding Page 3 (last)
+      No brand row · #F7FBF6 · rounded card (not arch — arch is Onboard 1 only)
+      Viewport: 390 × 844 · Paste entire file into Figma html.to.design
+      Image: assets/onboard_3_save_easy.png
+    */
+
+    :root {
+      --primary: #16a34a;
+      --on-background: #102015;
+      --background: #f7fbf6;
+      --gradient-start: #064e3b;
+      --gradient-end: #22c55e;
+      --text-muted: #66756a;
+      --outline: rgba(22, 163, 74, 0.25);
+      --on-primary: #ffffff;
+      --screen-w: 390px;
+      --screen-h: 844px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e8e8e8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 0;
+    }
+
+    .screen {
+      width: var(--screen-w);
+      height: var(--screen-h);
+      background: var(--background);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .accent-bar {
+      height: 6px;
+      width: 100%;
+      flex-shrink: 0;
+      background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px 4px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--on-background);
+      flex-shrink: 0;
+    }
+
+    .status-icons {
+      display: flex;
+      gap: 6px;
+      font-size: 12px;
+      opacity: 0.85;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 8px 24px 0;
+      min-height: 0;
+    }
+
+    .title {
+      font-size: 32px;
+      line-height: 38px;
+      font-weight: 700;
+      color: var(--on-background);
+      text-align: left;
+      margin-bottom: 8px;
+      white-space: pre-line;
+    }
+
+    .body-text {
+      font-size: 16px;
+      line-height: 24px;
+      font-weight: 400;
+      color: var(--text-muted);
+      text-align: left;
+      margin-bottom: 12px;
+    }
+
+    .illustration-wrap {
+      flex: 1;
+      min-height: 0;
+      border-radius: 24px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      background: transparent;
+    }
+
+    .illustration-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0 12px;
+      flex-shrink: 0;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(22, 163, 74, 0.28);
+    }
+
+    .dot.is-active {
+      width: 10px;
+      height: 10px;
+      background: var(--primary);
+    }
+
+    .footer {
+      padding: 0 24px 36px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      height: 54px;
+      border: none;
+      border-radius: 28px;
+      background: var(--primary);
+      color: var(--on-primary);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-outlined {
+      width: 100%;
+      height: 54px;
+      border: 1px solid var(--outline);
+      border-radius: 28px;
+      background: transparent;
+      color: var(--primary);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .home-indicator {
+      position: absolute;
+      left: 50%;
+      bottom: 8px;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      border-radius: 100px;
+      background: #000;
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    Figma html.to.design: Viewport 390 · Light
+    Keep assets/onboard_3_save_easy.png next to this file
+  -->
+
+  <div class="screen">
+    <div class="accent-bar" aria-hidden="true"></div>
+
+    <div class="status-bar" aria-hidden="true">
+      <span>9:41</span>
+      <span class="status-icons">
+        <span>●●●●</span>
+        <span>Wi‑Fi</span>
+        <span>100%</span>
+      </span>
+    </div>
+
+    <main class="content">
+      <h1 class="title">Save items easily</h1>
+
+      <p class="body-text">
+        Add keys, wallet, or charger and note where you placed them. Forget where you left something? Just search — takes less than 5 seconds.
+      </p>
+
+      <div class="illustration-wrap">
+        <img
+          src="assets/onboard_3_save_easy.png"
+          alt="Save items easily illustration"
+        />
+      </div>
+    </main>
+
+    <div class="dots" aria-hidden="true">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot is-active"></span>
+    </div>
+
+    <div class="footer">
+      <button class="btn-primary" type="button">Create account</button>
+      <button class="btn-outlined" type="button">I already have an account</button>
+    </div>
+
+    <div class="home-indicator" aria-hidden="true"></div>
+  </div>
+
+</body>
+</html>

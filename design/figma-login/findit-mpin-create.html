@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=390, initial-scale=1.0" />
+  <title>FindIt — Create MPIN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="findit-mpin-create.css" />
+</head>
+<body>
+
+  <!--
+    Figma import (html.to.design):
+      Viewport: 390 px
+      Theme:    Light
+    Frame size: 390 × 844 px
+
+    Screen: Setup PIN — step 1 "Create your MPIN"
+    Mascot: copy findit_character.png into assets/ folder (same as login)
+  -->
+  <div class="screen">
+
+    <header class="header">
+      <div class="status-bar" aria-hidden="true">
+        <span>9:02</span>
+        <span class="status-icons">
+          <span>●●●●</span>
+          <span>WiFi</span>
+          <span>84%</span>
+        </span>
+      </div>
+
+      <svg class="header-wave" viewBox="0 0 390 184" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="headerGrad" x1="0" y1="0" x2="390" y2="184" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#064E3B"/>
+            <stop offset="100%" stop-color="#22C55E"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#headerGrad)" d="M0,0 L390,0 L390,147.2 C304.2,180.3 218.4,154.6 187.2,136.2 C117,106.7 78,143.5 0,128.8 Z"/>
+        <circle cx="58" cy="40" r="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <circle cx="128" cy="55" r="46" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <circle cx="198" cy="40" r="36" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <circle cx="268" cy="55" r="46" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      </svg>
+
+      <div class="header-branding">
+        <div class="brand-text">
+          <h1>FindIt</h1>
+          <p>Never lose track again</p>
+        </div>
+        <img class="brand-mascot" src="assets/findit_character.png" alt="FindIt mascot" />
+      </div>
+    </header>
+
+    <main class="content">
+
+      <h2 class="page-title">Create your MPIN</h2>
+      <div class="title-accent" aria-hidden="true"></div>
+      <p class="page-subtitle">Set a 6-digit PIN to secure your account</p>
+
+      <section class="pin-section" aria-label="PIN entry">
+
+        <!-- Example: 3 digits entered (hi-fi preview) -->
+        <div class="pin-dots" role="group" aria-label="PIN progress">
+          <span class="pin-dot pin-dot--filled"></span>
+          <span class="pin-dot pin-dot--filled"></span>
+          <span class="pin-dot pin-dot--filled"></span>
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+        </div>
+
+        <div class="keypad" role="group" aria-label="PIN keypad">
+          <div class="keypad-row">
+            <button class="keypad-key" type="button">1</button>
+            <button class="keypad-key" type="button">2</button>
+            <button class="keypad-key" type="button">3</button>
+          </div>
+          <div class="keypad-row">
+            <button class="keypad-key" type="button">4</button>
+            <button class="keypad-key" type="button">5</button>
+            <button class="keypad-key" type="button">6</button>
+          </div>
+          <div class="keypad-row">
+            <button class="keypad-key" type="button">7</button>
+            <button class="keypad-key" type="button">8</button>
+            <button class="keypad-key" type="button">9</button>
+          </div>
+          <div class="keypad-row">
+            <span class="keypad-key keypad-key--ghost" aria-hidden="true"></span>
+            <button class="keypad-key" type="button">0</button>
+            <button class="keypad-key keypad-key--backspace" type="button" aria-label="Backspace">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <div class="biometric-row">
+        <div class="biometric-label">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12.01 3c-1.98 0-3.86.47-5.57 1.41-.24.13-.54.04-.68-.2-.13-.24-.04-.55.2-.68C7.82 2.52 9.86 2 12.01 2c2.13 0 3.99.47 6.03 1.52.25.13.34.43.21.67-.09.18-.26.28-.44.28zM3.5 9.72c-.1 0-.2-.03-.29-.09-.23-.14-.3-.44-.15-.67.49-.76 1.09-1.46 1.78-2.08.2-.18.51-.17.71.02.18.2.17.51-.02.71-.59.52-1.08 1.11-1.49 1.75-.11.16-.29.25-.54.25zm14.77 10.86c-.19 0-.38-.09-.49-.26-.15-.22-.09-.52.12-.67.87-.65 1.63-1.45 2.24-2.36.14-.22.44-.28.66-.14.22.14.28.44.14.66-.68 1.01-1.54 1.91-2.53 2.66-.1.07-.22.11-.34.11zm-8.77-1.7c-2.1 0-3.81-1.71-3.81-3.81s1.71-3.81 3.81-3.81 3.81 1.71 3.81 3.81-1.71 3.81-3.81 3.81zm0-6.12c-1.27 0-2.31 1.04-2.31 2.31s1.04 2.31 2.31 2.31 2.31-1.04 2.31-2.31-1.04-2.31-2.31-2.31zM22 13.09c-.13 0-.26-.05-.35-.15-.19-.2-.18-.51.02-.71.59-.52 1.08-1.11 1.49-1.75.11-.16.29-.25.54-.25.1 0 .2.03.29.09.23.14.3.44.15.67-.49.76-1.09 1.46-1.78 2.08-.1.09-.23.12-.36.12zm-1.22 3.06c-.08 0-.16-.02-.23-.06-1.81-.94-3.59-1.41-5.54-1.41-1.98 0-3.86.47-5.57 1.41-.24.13-.54.04-.68-.2-.13-.24-.04-.55.2-.68C7.82 14.52 9.86 14 12.01 14c2.13 0 3.99.47 6.03 1.52.25.13.34.43.21.67-.09.18-.26.28-.44.28z"/>
+          </svg>
+          <span>Use fingerprint unlock</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" checked />
+          <span class="toggle-track"></span>
+          <span class="toggle-thumb"></span>
+        </label>
+      </div>
+
+    </main>
+
+    <div class="nav-bar" aria-hidden="true"></div>
+
+  </div>
+
+</body>
+</html>

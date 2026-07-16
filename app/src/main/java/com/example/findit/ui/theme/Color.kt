@@ -13,6 +13,7 @@ val FindItSurface        = Color(0xFFFFFFFF)
 val FindItOnPrimary      = Color(0xFFFFFFFF)
 val FindItOnSurface      = Color(0xFF102015)
 val FindItOnSurfaceSoft  = Color(0xFF66756A)
+val FindItError          = Color(0xFFDC2626)
 val FindItGradientStart  = Color(0xFF064E3B)
 val FindItGradientEnd    = Color(0xFF22C55E)
 

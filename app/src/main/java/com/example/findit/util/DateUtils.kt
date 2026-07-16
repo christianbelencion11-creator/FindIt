@@ -8,3 +8,8 @@ fun formatDate(timestamp: Long): String {
     val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     return formatter.format(Date(timestamp))
 }
+
+fun formatDateTime(timestamp: Long): String {
+    val formatter = SimpleDateFormat("MMM dd, yyyy 'at' h:mm a", Locale.getDefault())
+    return formatter.format(Date(timestamp))
+}

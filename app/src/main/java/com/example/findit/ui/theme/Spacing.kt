@@ -17,8 +17,14 @@ object Spacing {
 object Dimensions {
     val cardCornerRadius    = 20.dp
     val headerCornerRadius  = 28.dp
-    val headerContentHome   = 180.dp  // status bar + date row + greeting (must not clip name)
-    val headerContentStd    = 164.dp  // Includes status-bar-safe breathing room
-    val bottomBarElevation  = 0.dp
-    val cardElevation       = 2.dp
+    val headerContentHome   = 156.dp  // date + greeting + name + weather row
+    val headerContentStd    = 124.dp  // title + subtitle
+    val headerContentWithMenu = 124.dp  // menu + title + subtitle (same row)
+    val headerContentActionsOnly = 56.dp  // Back / Refresh row only (no title in header)
+    val headerContentTall   = 176.dp  // taller header (legacy; prefer headerContentStd)
+    val headerContentCompact = 0.dp  // fully collapsed — body is edge-to-edge below status bar
+    val bottomBarElevation       = 0.dp
+    val cardElevation            = 2.dp
+    /** Floating pill bottom nav clearance above the system nav bar. */
+    val floatingBottomNavClearance = 88.dp
 }

@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +27,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.findit.R
+import com.example.findit.auth.FirebaseAuthRepository
 import com.example.findit.ui.components.AuthMutedColor
 import com.example.findit.ui.theme.Spacing
 import com.example.findit.util.AuthPreferences
@@ -34,20 +35,39 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
+    authRepository: FirebaseAuthRepository,
     authPreferences: AuthPreferences,
+    onRestoreSession: () -> Unit = {},
+    onNavigateToGetStarted: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToUnlock: () -> Unit,
-    onNavigateToMain: () -> Unit
+    onNavigateToSetupPin: () -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         visible = true
         delay(2200)
+        val uid = authRepository.currentUser?.uid.orEmpty()
         when {
-            authPreferences.needsUnlock() -> onNavigateToUnlock()
-            authPreferences.isLoggedIn() -> onNavigateToMain()
-            else -> onNavigateToLogin()
+            !authRepository.isFirebaseSignedIn() || uid.isBlank() -> {
+                if (authPreferences.isLoggedIn()) {
+                    authPreferences.logout()
+                }
+                if (authPreferences.hasSeenGetStarted()) {
+                    onNavigateToLogin()
+                } else {
+                    onNavigateToGetStarted()
+                }
+            }
+            authPreferences.isPinSet(uid) -> {
+                onRestoreSession()
+                onNavigateToUnlock()
+            }
+            else -> {
+                onRestoreSession()
+                onNavigateToSetupPin()
+            }
         }
     }
 
@@ -75,10 +95,11 @@ fun SplashScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            painter = painterResource(R.drawable.findit_logo_transparent),
-            contentDescription = "FindIt logo",
+            painter = painterResource(R.drawable.iremember_logo),
+            contentDescription = "IRemember logo",
             modifier = Modifier
-                .size(132.dp)
+                .width(220.dp)
+                .height(176.dp)
                 .scale(logoScale)
                 .alpha(logoAlpha),
             contentScale = ContentScale.Fit

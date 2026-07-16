@@ -9,30 +9,111 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ItemDao {
-    @Query("SELECT * FROM items ORDER BY dateCreated DESC")
-    fun getAllItems(): Flow<List<ItemEntity>>
+    @Query("SELECT * FROM items WHERE ownerUid = :ownerUid ORDER BY dateCreated DESC")
+    fun getAllItems(ownerUid: String): Flow<List<ItemEntity>>
 
-    @Query("SELECT * FROM items WHERE id = :id")
-    fun getItemById(id: Long): Flow<ItemEntity?>
+    @Query("SELECT * FROM items WHERE ownerUid = :ownerUid AND id = :id")
+    fun getItemById(ownerUid: String, id: Long): Flow<ItemEntity?>
+
+    @Query("SELECT * FROM items WHERE id = :id LIMIT 1")
+    suspend fun getItemByIdOnce(id: Long): ItemEntity?
 
     @Query(
         """
         SELECT * FROM items
-        WHERE name LIKE '%' || :query || '%'
+        WHERE ownerUid = :ownerUid
+          AND (name LIKE '%' || :query || '%'
            OR location LIKE '%' || :query || '%'
            OR category LIKE '%' || :query || '%'
-           OR notes LIKE '%' || :query || '%'
+           OR notes LIKE '%' || :query || '%')
         ORDER BY dateCreated DESC
         """
     )
-    fun searchItems(query: String): Flow<List<ItemEntity>>
+    fun searchItems(ownerUid: String, query: String): Flow<List<ItemEntity>>
 
-    @Query("SELECT COUNT(*) FROM items")
-    suspend fun getItemCount(): Int
+    @Query(
+        """
+        SELECT * FROM items
+        WHERE ownerUid = :ownerUid AND remindActive = 1
+        ORDER BY remindNextAt ASC
+        """
+    )
+    fun getActiveReminders(ownerUid: String): Flow<List<ItemEntity>>
+
+    @Query("SELECT * FROM items WHERE remindActive = 1")
+    suspend fun getAllActiveReminders(): List<ItemEntity>
+
+    @Query("SELECT COUNT(*) FROM items WHERE ownerUid = :ownerUid")
+    suspend fun getItemCount(ownerUid: String): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(item: ItemEntity): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertItems(items: List<ItemEntity>)
+    @Query(
+        """
+        UPDATE items SET lastFoundAt = :timestamp
+        WHERE ownerUid = :ownerUid AND id = :id AND lastFoundAt = 0
+        """
+    )
+    suspend fun markItemFound(ownerUid: String, id: Long, timestamp: Long): Int
+
+    @Query(
+        """
+        UPDATE items SET
+          remindEnabled = :enabled,
+          remindHour = :hour,
+          remindMinute = :minute,
+          remindNextAt = :nextAt,
+          remindActive = :active
+        WHERE ownerUid = :ownerUid AND id = :id
+        """
+    )
+    suspend fun updateReminder(
+        ownerUid: String,
+        id: Long,
+        enabled: Boolean,
+        hour: Int,
+        minute: Int,
+        nextAt: Long,
+        active: Boolean
+    ): Int
+
+    @Query(
+        """
+        UPDATE items SET remindNextAt = :nextAt, remindActive = :active
+        WHERE id = :id
+        """
+    )
+    suspend fun updateReminderSchedule(id: Long, nextAt: Long, active: Boolean): Int
+
+    @Query(
+        """
+        UPDATE items SET remindActive = 0, remindEnabled = 0, remindNextAt = 0
+        WHERE id = :id
+        """
+    )
+    suspend fun stopReminder(id: Long): Int
+
+    @Query("DELETE FROM items WHERE ownerUid = :ownerUid AND id = :id")
+    suspend fun deleteItem(ownerUid: String, id: Long): Int
+
+    @Query(
+        """
+        DELETE FROM items
+        WHERE ownerUid = :ownerUid
+          AND lastFoundAt > 0
+          AND lastFoundAt <= :beforeTimestamp
+        """
+    )
+    suspend fun deleteExpiredFoundItems(ownerUid: String, beforeTimestamp: Long): Int
+
+    @Query(
+        """
+        SELECT id FROM items
+        WHERE ownerUid = :ownerUid
+          AND lastFoundAt > 0
+          AND lastFoundAt <= :beforeTimestamp
+        """
+    )
+    suspend fun getExpiredFoundItemIds(ownerUid: String, beforeTimestamp: Long): List<Long>
 }

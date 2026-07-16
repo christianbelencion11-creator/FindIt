@@ -1,9 +1,9 @@
 package com.example.findit.screens.auth
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,28 +18,38 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.example.findit.auth.FirebaseAuthRepository
+import com.example.findit.auth.UsernameAuth
 import com.example.findit.ui.components.AuthCardColor
+import com.example.findit.ui.components.AuthErrorText
 import com.example.findit.ui.components.AuthFieldBorderColor
 import com.example.findit.ui.components.AuthMutedColor
 import com.example.findit.ui.components.AuthShell
@@ -47,29 +57,33 @@ import com.example.findit.ui.components.AuthTextColor
 import com.example.findit.ui.theme.Spacing
 import com.example.findit.util.AuthPreferences
 import com.example.findit.util.PasswordUtils
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
+    authRepository: FirebaseAuthRepository,
     authPreferences: AuthPreferences,
-    onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onLoginSuccess: (FirebaseAuthRepository.SignedInUser) -> Unit,
+    onNavigateToRegister: () -> Unit,
+    onNavigateToForgotPassword: (username: String) -> Unit
 ) {
-    var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     AuthShell(
         title = "Sign in",
-        subtitle = "Welcome back to FindIt",
-        contentTopPadding = 276.dp,
+        subtitle = "Welcome back to IRemember Sign-in Page",
+        scrollable = true,
         footerLink = "Don't have an account? Create one" to onNavigateToRegister
     ) {
         AuthTextField(
-            value = email,
-            onValueChange = { email = it; error = null },
-            label = "Email",
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            value = username,
+            onValueChange = { username = it; error = null },
+            label = "Username"
         )
         AuthTextField(
             value = password,
@@ -86,68 +100,71 @@ fun LoginScreen(
                 }
             }
         )
-        error?.let {
-            Text(
-                text = it,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
+        TextButton(
+            onClick = { onNavigateToForgotPassword(username.trim()) },
+            modifier = Modifier.fillMaxWidth(),
+            content = {
+                Text(
+                    text = "Forgot password?",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.End
+                )
+            }
+        )
+        error?.let { AuthErrorText(it) }
         Spacer(Modifier.height(Spacing.sm))
         Button(
             onClick = {
+                if (isLoading) return@Button
                 when {
-                    email.isBlank() || password.isBlank() ->
-                        error = "Please enter your email and password."
-                    !PasswordUtils.isValidEmail(email) ->
-                        error = "Please enter a valid email address."
-                    else -> when (val result = authPreferences.login(email, password)) {
-                        is AuthPreferences.AuthResult.Success -> onLoginSuccess()
-                        is AuthPreferences.AuthResult.Error -> error = result.message
+                    username.isBlank() || password.isBlank() ->
+                        error = "Please enter your username and password."
+                    UsernameAuth.looksLikeEmail(username) ->
+                        error = "Sign in with your username (not email)."
+                    else -> {
+                        isLoading = true
+                        error = null
+                        scope.launch {
+                            try {
+                                when (val result = authRepository.signInWithUsername(username, password)) {
+                                    is FirebaseAuthRepository.AuthResult.Success ->
+                                        onLoginSuccess(result.user)
+                                    is FirebaseAuthRepository.AuthResult.Error -> error = result.message
+                                }
+                            } finally {
+                                isLoading = false
+                            }
+                        }
                     }
                 }
             },
+            enabled = !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(54.dp),
             shape = RoundedCornerShape(18.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                disabledContainerColor = MaterialTheme.colorScheme.primary,
+                disabledContentColor = MaterialTheme.colorScheme.onPrimary
+            )
         ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(end = Spacing.sm)
+                        .size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            }
             Text(
-                "Sign In",
+                if (isLoading) "Signing in…" else "Sign In",
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-        Text(
-            text = "or continue with",
-            style = MaterialTheme.typography.bodySmall,
-            color = AuthMutedColor,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = Spacing.xs)
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-        ) {
-            SocialSignInButton(
-                label = "Gmail",
-                mark = "G",
-                color = Color(0xFFDB4437),
-                onClick = {
-                    error = "Gmail login needs Google OAuth setup first."
-                },
-                modifier = Modifier.weight(1f)
-            )
-            SocialSignInButton(
-                label = "Facebook",
-                mark = "f",
-                color = Color(0xFF1877F2),
-                onClick = {
-                    error = "Facebook login needs app ID setup first."
-                },
-                modifier = Modifier.weight(1f)
             )
         }
     }
@@ -155,39 +172,167 @@ fun LoginScreen(
 
 @Composable
 fun RegisterScreen(
+    authRepository: FirebaseAuthRepository,
     authPreferences: AuthPreferences,
-    onRegisterSuccess: () -> Unit,
+    onRegisterSuccess: (FirebaseAuthRepository.SignedInUser) -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
-    var fullName by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var secretDetails by remember { mutableStateOf("") }
     var acceptedTerms by remember { mutableStateOf(false) }
     var showPassword by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var showExistingAccountBanner by remember { mutableStateOf(false) }
+    var pendingSuccessUser by remember {
+        mutableStateOf<FirebaseAuthRepository.SignedInUser?>(null)
+    }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        showExistingAccountBanner = authRepository.isFirebaseSignedIn() ||
+            (authPreferences.isRegistered() && authPreferences.getUsername().isNotBlank())
+    }
+
+    if (pendingSuccessUser != null) {
+        AccountCreatedSuccessDialog(
+            username = pendingSuccessUser!!.displayName,
+            onContinue = {
+                val user = pendingSuccessUser!!
+                pendingSuccessUser = null
+                onRegisterSuccess(user)
+            }
+        )
+    }
 
     AuthShell(
-        title = "Create account",
-        subtitle = "Secure your FindIt inventory",
+        title = "Create New Account",
+        subtitle = "Please enter your details and ensure your password",
         scrollable = true,
         contentTopPadding = 304.dp,
-        footerLink = "Already have an account? Sign in" to onNavigateToLogin
+        footerLink = "Already have an account? Sign in" to onNavigateToLogin,
+        stickyBottomBar = {
+            error?.let {
+                AuthErrorText(
+                    it,
+                    modifier = Modifier.padding(bottom = Spacing.sm)
+                )
+                if (it.contains("already taken", ignoreCase = true) ||
+                    it.contains("already registered", ignoreCase = true)
+                ) {
+                    TextButton(
+                        onClick = onNavigateToLogin,
+                        modifier = Modifier.padding(bottom = Spacing.xs)
+                    ) {
+                        Text("Go to Sign in")
+                    }
+                }
+            }
+            Button(
+                onClick = {
+                    if (isLoading) return@Button
+                    when {
+                        !UsernameAuth.isValidUsername(username) ->
+                            error = "Username must be 3–24 characters (letters, numbers, underscore)."
+                        !PasswordUtils.isValidEmail(email) ->
+                            error = "Please enter a valid email address."
+                        !PasswordUtils.isStrongEnough(password) ->
+                            error = "Password must be at least 8 characters with letters and numbers."
+                        password != confirmPassword -> error = "Passwords do not match."
+                        secretDetails.isBlank() -> error = "Secret details are required."
+                        !acceptedTerms -> error = "Please accept the Terms and Privacy Policy."
+                        else -> {
+                            isLoading = true
+                            error = null
+                            scope.launch {
+                                try {
+                                    when (
+                                        val result = authRepository.createAccountWithUsername(
+                                            username = username,
+                                            email = email,
+                                            password = password,
+                                            secret = secretDetails
+                                        )
+                                    ) {
+                                        is FirebaseAuthRepository.AuthResult.Success ->
+                                            pendingSuccessUser = result.user
+                                        is FirebaseAuthRepository.AuthResult.Error ->
+                                            error = result.message
+                                    }
+                                } catch (e: Exception) {
+                                    error = e.message ?: "Registration failed. Please try again."
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+                        }
+                    }
+                },
+                enabled = !isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    // Keep solid green while loading — default disabled style looks like the button vanished.
+                    disabledContainerColor = MaterialTheme.colorScheme.primary,
+                    disabledContentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(end = Spacing.sm)
+                            .size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                }
+                Text(
+                    if (isLoading) "Creating account…" else "Create Account",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
     ) {
+        if (showExistingAccountBanner) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
+                        shape = RoundedCornerShape(18.dp)
+                    )
+                    .clickable(onClick = onNavigateToLogin)
+                    .padding(Spacing.md),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "An account already exists — tap here to Sign in instead.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Spacer(Modifier.height(Spacing.sm))
+        }
         AuthSectionLabel("Account details")
-        AuthTextField(value = fullName, onValueChange = { fullName = it; error = null }, label = "Full name")
+        AuthTextField(
+            value = username,
+            onValueChange = { username = it; error = null },
+            label = "Username"
+        )
         AuthTextField(
             value = email,
             onValueChange = { email = it; error = null },
             label = "Email address",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-        AuthTextField(
-            value = phone,
-            onValueChange = { phone = it; error = null },
-            label = "Mobile number",
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
         )
         Spacer(Modifier.height(Spacing.xs))
         AuthSectionLabel("Security")
@@ -219,45 +364,101 @@ fun RegisterScreen(
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
+        Spacer(Modifier.height(Spacing.xs))
+        AuthSectionLabel("Additional Security (in case password is forgotten)")
+        AuthTextField(
+            value = secretDetails,
+            onValueChange = { secretDetails = it; error = null },
+            label = "Add Secret Details"
+        )
         TermsCheckbox(
             checked = acceptedTerms,
             onCheckedChange = { acceptedTerms = it; error = null }
         )
-        error?.let {
-            Text(
-                text = it,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-        Spacer(Modifier.height(Spacing.sm))
-        Button(
-            onClick = {
-                when {
-                    fullName.isBlank() -> error = "Full name is required."
-                    !PasswordUtils.isValidEmail(email) -> error = "Enter a valid email address."
-                    phone.length < 10 -> error = "Enter a valid mobile number."
-                    !PasswordUtils.isStrongEnough(password) ->
-                        error = "Password must be at least 8 characters with letters and numbers."
-                    password != confirmPassword -> error = "Passwords do not match."
-                    !acceptedTerms -> error = "Please accept the Terms and Privacy Policy."
-                    else -> when (val result = authPreferences.register(fullName, email, phone, password)) {
-                        is AuthPreferences.AuthResult.Success -> onRegisterSuccess()
-                        is AuthPreferences.AuthResult.Error -> error = result.message
-                    }
-                }
-            },
+    }
+}
+
+@Composable
+private fun AccountCreatedSuccessDialog(
+    username: String,
+    onContinue: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onContinue,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp),
-            shape = RoundedCornerShape(18.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                .padding(horizontal = Spacing.xl),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = AuthCardColor)
         ) {
-            Text(
-                "Create Account",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.xxl),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .background(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .background(
+                                MaterialTheme.colorScheme.primary,
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "✓",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                Spacer(Modifier.height(Spacing.lg))
+                Text(
+                    text = "Account created successfully",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = AuthTextColor,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(Spacing.sm))
+                Text(
+                    text = "Welcome, $username! Next, set your MPIN to secure IRemember.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AuthMutedColor,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(Spacing.xxl))
+                Button(
+                    onClick = onContinue,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(
+                        text = "Continue",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
         }
     }
 }
@@ -276,8 +477,7 @@ fun AuthTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         singleLine = true,
         visualTransformation = visualTransformation,
         keyboardOptions = keyboardOptions,
@@ -300,7 +500,7 @@ fun AuthTextField(
 }
 
 @Composable
-private fun AuthSectionLabel(text: String) {
+fun AuthSectionLabel(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge,
@@ -335,45 +535,6 @@ private fun TermsCheckbox(
             text = "I agree to the Terms of Service and Privacy Policy",
             style = MaterialTheme.typography.bodySmall,
             color = AuthTextColor,
-            modifier = Modifier.padding(start = Spacing.xs)
-        )
-    }
-}
-
-@Composable
-private fun SocialSignInButton(
-    label: String,
-    mark: String,
-    color: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier.height(52.dp),
-        shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, AuthFieldBorderColor),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = AuthCardColor,
-            contentColor = AuthTextColor
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .background(color.copy(alpha = 0.12f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = mark,
-                color = color,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.padding(start = Spacing.xs)
         )
     }

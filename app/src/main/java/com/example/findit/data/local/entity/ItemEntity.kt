@@ -13,7 +13,14 @@ data class ItemEntity(
     val category: String,
     val notes: String,
     val imageUri: String = "",
-    val dateCreated: Long = System.currentTimeMillis()
+    val dateCreated: Long = System.currentTimeMillis(),
+    val ownerUid: String = "",
+    val lastFoundAt: Long = 0,
+    val remindEnabled: Boolean = false,
+    val remindHour: Int = 8,
+    val remindMinute: Int = 0,
+    val remindNextAt: Long = 0L,
+    val remindActive: Boolean = false
 )
 
 fun ItemEntity.toItem(): Item = Item(
@@ -23,7 +30,14 @@ fun ItemEntity.toItem(): Item = Item(
     category = category,
     notes = notes,
     imageUri = imageUri,
-    dateCreated = dateCreated
+    dateCreated = dateCreated,
+    ownerUid = ownerUid,
+    lastFoundAt = lastFoundAt,
+    remindEnabled = remindEnabled,
+    remindHour = remindHour,
+    remindMinute = remindMinute,
+    remindNextAt = remindNextAt,
+    remindActive = remindActive
 )
 
 fun Item.toEntity(): ItemEntity = ItemEntity(
@@ -33,5 +47,12 @@ fun Item.toEntity(): ItemEntity = ItemEntity(
     category = category,
     notes = notes,
     imageUri = imageUri,
-    dateCreated = dateCreated
+    dateCreated = dateCreated,
+    ownerUid = ownerUid,
+    lastFoundAt = lastFoundAt,
+    remindEnabled = remindEnabled,
+    remindHour = remindHour,
+    remindMinute = remindMinute,
+    remindNextAt = remindNextAt,
+    remindActive = remindActive
 )

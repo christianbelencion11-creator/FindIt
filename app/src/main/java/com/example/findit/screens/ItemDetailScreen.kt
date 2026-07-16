@@ -1,43 +1,66 @@
 package com.example.findit.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.findit.ui.components.FoundConfirmDialog
+import com.example.findit.ui.components.FoundSuccessDialog
 import com.example.findit.ui.components.HeaderIconButton
 import com.example.findit.ui.components.PremiumScaffold
+import com.example.findit.ui.components.RemindMeCard
+import com.example.findit.ui.components.categoryIcon
 import com.example.findit.ui.theme.Dimensions
+import com.example.findit.ui.theme.FindItBlue
+import com.example.findit.ui.theme.FindItBlueDeep
+import com.example.findit.ui.theme.FindItBlueLight
 import com.example.findit.ui.theme.Spacing
-import com.example.findit.util.formatDate
+import com.example.findit.ui.theme.StatBlue
+import com.example.findit.ui.theme.StatBlueDark
+import com.example.findit.util.formatDateTime
 import com.example.findit.viewmodel.ItemViewModel
-import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 fun ItemDetailScreen(
@@ -46,52 +69,111 @@ fun ItemDetailScreen(
     onBackClick: () -> Unit
 ) {
     val item by viewModel.itemById(itemId).collectAsState(initial = null)
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var draftHour by remember(item?.id, item?.remindHour) {
+        mutableIntStateOf(item?.remindHour ?: 8)
+    }
+    var draftMinute by remember(item?.id, item?.remindMinute) {
+        mutableIntStateOf(item?.remindMinute ?: 0)
+    }
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
-        PremiumScaffold(
-            modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
-            headerContent = {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.xl, vertical = Spacing.xxl),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-                ) {
-                    HeaderIconButton(onClick = onBackClick)
-                    Column(modifier = Modifier.weight(1f)) {
+    if (showConfirmDialog && item != null && item!!.lastFoundAt == 0L) {
+        FoundConfirmDialog(
+            itemName = item!!.name,
+            location = item!!.location,
+            onConfirm = {
+                showConfirmDialog = false
+                viewModel.markItemFound(itemId) { success ->
+                    if (success) showSuccessDialog = true
+                }
+            },
+            onCancel = { showConfirmDialog = false }
+        )
+    }
+
+    if (showSuccessDialog && item != null) {
+        FoundSuccessDialog(
+            itemName = item!!.name,
+            location = item!!.location,
+            onDone = {
+                showSuccessDialog = false
+                onBackClick()
+            },
+            onFindAnother = { showSuccessDialog = false }
+        )
+    }
+
+    PremiumScaffold(
+        headerHeight = Dimensions.headerContentStd,
+        headerContent = { collapseFraction ->
+            val secondaryAlpha = (1f - collapseFraction).coerceIn(0f, 1f)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = Spacing.xl, end = Spacing.xl, top = Spacing.md, bottom = Spacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+            ) {
+                HeaderIconButton(
+                    onClick = onBackClick,
+                    containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.14f),
+                    iconTint = MaterialTheme.colorScheme.onPrimary
+                )
+                ItemHeaderThumbnail(
+                    category = item?.category.orEmpty(),
+                    imageUri = item?.imageUri.orEmpty()
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = item?.name ?: "",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    if (item?.category?.isNotEmpty() == true) {
                         Text(
-                            text = item?.name ?: "",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.onPrimary
+                            text = item!!.category,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                            modifier = Modifier
+                                .padding(top = 2.dp)
+                                .alpha(secondaryAlpha)
                         )
-                        if (item?.category?.isNotEmpty() == true) {
-                            Text(
-                                text = item!!.category,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
-                                modifier = Modifier.padding(top = 2.dp)
-                            )
-                        }
                     }
                 }
             }
-        ) {
-            when (val currentItem = item) {
-                null -> Text(
-                    "Item not found",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(Spacing.xl)
-                )
-                else -> {
+        }
+    ) { scrollModifier ->
+        when (val currentItem = item) {
+            null -> Text(
+                "Item not found",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(Spacing.xl)
+            )
+            else -> {
+                val isAlreadyFound = currentItem.lastFoundAt > 0L
+
+                Column(modifier = Modifier.fillMaxSize()) {
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .weight(1f)
+                            .then(scrollModifier)
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = Spacing.xl, vertical = Spacing.xl),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.lg)
+                            .navigationBarsPadding()
+                            .padding(
+                                start = Spacing.xl,
+                                end = Spacing.xl,
+                                top = Spacing.md,
+                                bottom = if (isAlreadyFound) Spacing.xxxl else Spacing.lg
+                            ),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) {
-                        // Photo card
+                        LocationHeroCard(location = currentItem.location)
+
+                        if (isAlreadyFound) {
+                            FoundBadge(dateText = formatDateTime(currentItem.lastFoundAt))
+                        }
+
                         if (currentItem.imageUri.isNotEmpty()) {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -111,7 +193,6 @@ fun ItemDetailScreen(
                             }
                         }
 
-                        // Details card
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(Dimensions.cardCornerRadius),
@@ -124,19 +205,189 @@ fun ItemDetailScreen(
                                     .padding(Spacing.xl),
                                 verticalArrangement = Arrangement.spacedBy(Spacing.lg)
                             ) {
-                                DetailRow(Icons.Default.Place,       "Location",    currentItem.location)
+                                DetailRow(Icons.Default.Place, "Location", currentItem.location)
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
-                                DetailRow(Icons.Default.Category,    "Category",    currentItem.category)
+                                DetailRow(Icons.Default.Category, "Category", currentItem.category)
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
-                                DetailRow(Icons.Default.Description, "Notes",       currentItem.notes.ifBlank { "—" })
+                                DetailRow(Icons.Default.Description, "Notes", currentItem.notes.ifBlank { "—" })
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
-                                DetailRow(Icons.Default.CalendarToday, "Date Saved", formatDate(currentItem.dateCreated))
+                                DetailRow(
+                                    Icons.Default.CalendarToday,
+                                    "Saved on",
+                                    formatDateTime(currentItem.dateCreated)
+                                )
                             }
                         }
+
+                        RemindMeCard(
+                            enabled = currentItem.remindEnabled || currentItem.remindActive,
+                            hour = draftHour,
+                            minute = draftMinute,
+                            nextAt = currentItem.remindNextAt,
+                            isActive = currentItem.remindActive,
+                            showActions = true,
+                            onToggle = { checked ->
+                                if (!checked) {
+                                    viewModel.stopReminder(itemId)
+                                }
+                            },
+                            onTimePicked = { h, m ->
+                                draftHour = h
+                                draftMinute = m
+                            },
+                            onEnable = {
+                                viewModel.setReminder(itemId, draftHour, draftMinute)
+                            },
+                            onSnooze = { viewModel.snoozeReminder(itemId) },
+                            onStop = { viewModel.stopReminder(itemId) }
+                        )
+                    }
+
+                    if (!isAlreadyFound) {
+                        FoundActionBar(onClick = { showConfirmDialog = true })
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ItemHeaderThumbnail(
+    category: String,
+    imageUri: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(48.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Brush.linearGradient(listOf(StatBlue, StatBlueDark))),
+        contentAlignment = Alignment.Center
+    ) {
+        if (imageUri.isNotEmpty()) {
+            AsyncImage(
+                model = imageUri,
+                contentDescription = category,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(14.dp)),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Icon(
+                imageVector = categoryIcon(category),
+                contentDescription = category,
+                tint = Color.White,
+                modifier = Modifier.size(26.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun FoundActionBar(onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.background,
+        shadowElevation = 8.dp
+    ) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = Spacing.xl, vertical = Spacing.lg)
+                .height(52.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(end = Spacing.sm)
+                    .size(20.dp)
+            )
+            Text(
+                text = "I Found It!",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+    }
+}
+
+@Composable
+private fun LocationHeroCard(location: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Dimensions.cardCornerRadius),
+        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
+        colors = CardDefaults.cardColors(containerColor = FindItBlueLight)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(FindItBlue),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Place,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Look here",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = FindItBlueDeep.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = location,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = FindItBlueDeep,
+                    modifier = Modifier.padding(top = Spacing.xxs)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FoundBadge(dateText: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+    ) {
+        Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp)
+        )
+        Text(
+            text = "Found on $dateText",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 

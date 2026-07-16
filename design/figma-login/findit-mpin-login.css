@@ -1,0 +1,218 @@
+/* IRemember — Login with MPIN (Unlock)
+   Viewport: 390 × 844 px
+   Compact layout so keypad fits in Figma import */
+
+:root {
+  --primary: #16a34a;
+  --bg: #ffffff;
+  --text: #102015;
+  --text-muted: #66756a;
+  --nav-bar: #000000;
+  --screen-width: 390px;
+  --screen-height: 844px;
+  --key-size: 60px;
+  --dot-size: 14px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #e8e8e8;
+  display: flex;
+  justify-content: center;
+}
+
+.screen {
+  width: var(--screen-width);
+  height: var(--screen-height);
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.status-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.status-icons {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.header {
+  height: 150px;
+  position: relative;
+}
+
+.header-wave {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.header-branding {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px 20px 0;
+  height: 100%;
+}
+
+.brand-text h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 34px;
+}
+
+.brand-text p {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 4px;
+}
+
+.brand-mascot {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.content {
+  padding: 12px 20px 0;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 32px;
+}
+
+.title-accent {
+  width: 60px;
+  height: 3px;
+  background: var(--primary);
+  margin-top: 4px;
+  border-radius: 2px;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  margin-bottom: 18px;
+  line-height: 18px;
+}
+
+.pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.pin-dot {
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  background: var(--bg);
+}
+
+.pin-dot--filled {
+  background: var(--primary);
+}
+
+.keypad {
+  width: 260px;
+  margin: 0 auto;
+}
+
+.keypad-row {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+.key {
+  width: var(--key-size);
+  height: var(--key-size);
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(6, 78, 59, 0.2);
+}
+
+.key--ghost {
+  visibility: hidden;
+}
+
+.key--back svg {
+  width: 22px;
+  height: 22px;
+  fill: #fff;
+}
+
+.fingerprint-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: rgba(221, 252, 232, 0.55);
+  border-radius: 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.fingerprint-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: var(--primary);
+}
+
+.forgot-link {
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary);
+}
+
+.nav-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: var(--nav-bar);
+}

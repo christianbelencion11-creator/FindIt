@@ -53,9 +53,22 @@ fun SetupPinScreen(
     }
     var enableBiometric by remember(biometricAvailable) { mutableStateOf(biometricAvailable) }
 
+    fun resetToCreate(keepError: String? = null) {
+        step = 0
+        firstPin = ""
+        pin = ""
+        error = keepError
+    }
+
     AuthShell(
-        title = if (step == 0) "Create your PIN" else "Confirm your PIN",
-        subtitle = "Secure quick access to your items",
+        title = when (step) {
+            0 -> "Create your MPIN"
+            else -> "Confirm your MPIN"
+        },
+        subtitle = when (step) {
+            0 -> "Set a 6-digit PIN to secure your account"
+            else -> "Enter the same MPIN again to confirm"
+        },
         centerContent = true,
         contentTopPadding = 276.dp
     ) {
@@ -84,18 +97,31 @@ fun SetupPinScreen(
                             authPreferences.setBiometricEnabled(enableBiometric && biometricAvailable)
                             onComplete()
                         } else {
-                            error = "PINs do not match. Try again."
-                            pin = ""
-                            firstPin = ""
-                            step = 0
+                            resetToCreate("PINs do not match. Start over and try again.")
                         }
                     }
                 }
             },
             onBackspace = {
                 if (pin.isNotEmpty()) pin = pin.dropLast(1)
+            },
+            onCancel = if (step == 1) {
+                { resetToCreate() }
+            } else {
+                null
             }
         )
+        if (step == 1) {
+            Spacer(Modifier.height(Spacing.sm))
+            TextButton(
+                onClick = { resetToCreate() },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("Start over")
+            }
+        }
         if (biometricAvailable) {
             Spacer(Modifier.height(Spacing.lg))
             Row(
@@ -156,8 +182,8 @@ fun UnlockScreen(
     }
 
     AuthShell(
-        title = "Welcome back",
-        subtitle = authPreferences.getEmail(),
+        title = "Enter your MPIN",
+        subtitle = authPreferences.getUsername().ifBlank { "Enter your MPIN" },
         centerContent = true,
         contentTopPadding = 276.dp
     ) {

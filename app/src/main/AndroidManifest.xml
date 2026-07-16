@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".FindItApplication"
@@ -24,6 +26,15 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <receiver
+            android:name=".reminders.ReminderActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.findit.reminders.SNOOZE" />
+                <action android:name="com.example.findit.reminders.STOP" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".MainActivity"

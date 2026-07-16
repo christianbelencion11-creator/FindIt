@@ -8,11 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -25,14 +28,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.findit.ui.theme.Spacing
 
 fun categoryIcon(category: String): ImageVector = when {
-    category.contains("Key",        ignoreCase = true) -> Icons.Default.VpnKey
-    category.contains("Document",   ignoreCase = true) -> Icons.Default.Description
+    category.equals("All", ignoreCase = true) -> Icons.Default.Apps
+    category.contains("Key", ignoreCase = true) -> Icons.Default.VpnKey
+    category.contains("Document", ignoreCase = true) -> Icons.Default.Description
     category.contains("Electronic", ignoreCase = true) -> Icons.Default.Devices
-    category.contains("Personal",   ignoreCase = true) -> Icons.Default.Person
+    category.contains("Wallet", ignoreCase = true) -> Icons.Default.AccountBalanceWallet
+    category.contains("Bag", ignoreCase = true) -> Icons.Default.ShoppingBag
+    category.contains("Personal", ignoreCase = true) -> Icons.Default.Person
+    category.contains("Other", ignoreCase = true) -> Icons.Default.Apps
     else -> Icons.Default.Inventory
 }
 
@@ -99,7 +107,10 @@ fun CategoryChip(
         label = {
             Text(
                 text = category,
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Clip
             )
         },
         leadingIcon = {
@@ -111,12 +122,13 @@ fun CategoryChip(
         },
         modifier = modifier,
         colors = FilterChipDefaults.filterChipColors(
-            containerColor          = c.bg,
-            labelColor              = c.text,
-            iconColor               = c.text,
-            selectedContainerColor  = c.accent.copy(alpha = 0.18f),
-            selectedLabelColor      = c.text,
-            selectedLeadingIconColor= c.text
+            containerColor = c.bg,
+            labelColor = c.text,
+            iconColor = c.text,
+            // Solid selected fill — low-alpha accents look murky on dark green screens.
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary
         )
     )
 }

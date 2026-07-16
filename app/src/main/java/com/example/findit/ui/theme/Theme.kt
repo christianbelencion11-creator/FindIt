@@ -8,6 +8,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 
 private val LightColorScheme = lightColorScheme(
@@ -23,7 +24,9 @@ private val LightColorScheme = lightColorScheme(
     onSurface            = FindItOnSurface,
     surfaceVariant       = FindItBlueUltraLight,
     onSurfaceVariant     = FindItOnSurfaceSoft,
-    outline              = FindItBlue.copy(alpha = 0.15f)
+    outline              = FindItBlue.copy(alpha = 0.15f),
+    error                = FindItError,
+    onError              = FindItOnPrimary
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -39,7 +42,9 @@ private val DarkColorScheme = darkColorScheme(
     onSurface            = FindItOnSurfaceDark,
     surfaceVariant       = FindItSurfaceVarDark,
     onSurfaceVariant     = FindItOnSurfaceDark.copy(alpha = 0.7f),
-    outline              = FindItBlueDark.copy(alpha = 0.2f)
+    outline              = FindItBlueDark.copy(alpha = 0.2f),
+    error                = Color(0xFFF87171),
+    onError              = Color(0xFF450A0A)
 )
 
 private val FindItShapes = Shapes(
@@ -63,10 +68,15 @@ fun FindItTheme(
     )
 }
 
+/** Uses MaterialTheme so ThemeMode (Light/Dark/Auto) stays in sync — not system alone. */
 @Composable
-fun gradientStartColor(darkTheme: Boolean = isSystemInDarkTheme()) =
-    if (darkTheme) FindItGradientStartDark else FindItGradientStart
+fun gradientStartColor(): Color {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    return if (isDark) FindItGradientStartDark else FindItGradientStart
+}
 
 @Composable
-fun gradientEndColor(darkTheme: Boolean = isSystemInDarkTheme()) =
-    if (darkTheme) FindItGradientEndDark else FindItGradientEnd
+fun gradientEndColor(): Color {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    return if (isDark) FindItGradientEndDark else FindItGradientEnd
+}

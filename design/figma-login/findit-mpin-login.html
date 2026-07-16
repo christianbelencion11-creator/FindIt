@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=390, initial-scale=1.0" />
+  <title>IRemember — Login with MPIN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* IRemember — Login with MPIN (Unlock)
+       Viewport: 390 × 844 · Theme: Light
+       Matches Android: UnlockScreen / PinScreens.kt
+       Paste this ENTIRE file into Figma html.to.design */
+
+    :root {
+      --primary: #16a34a;
+      --gradient-start: #064e3b;
+      --gradient-end: #22c55e;
+      --bg: #ffffff;
+      --text: #102015;
+      --text-muted: #66756a;
+      --nav-bar: #000000;
+      --screen-width: 390px;
+      --screen-height: 844px;
+      --key-size: 60px;
+      --dot-size: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e8e8e8;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .screen {
+      width: var(--screen-width);
+      height: var(--screen-height);
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .status-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 20px 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      pointer-events: none;
+    }
+
+    .status-icons { display: flex; gap: 6px; font-size: 12px; }
+
+    .header {
+      height: 160px;
+      position: relative;
+    }
+
+    .header-wave {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .header-branding {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 44px 20px 0;
+      height: 100%;
+    }
+
+    .brand-text h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 34px;
+    }
+
+    .brand-text p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.9);
+      margin-top: 4px;
+    }
+
+    .brand-mascot {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-mascot svg {
+      width: 40px;
+      height: 40px;
+      fill: #fff;
+    }
+
+    .content {
+      padding: 16px 20px 0;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 32px;
+    }
+
+    .title-accent {
+      width: 60px;
+      height: 3px;
+      background: var(--primary);
+      margin-top: 4px;
+      border-radius: 2px;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      margin-bottom: 20px;
+      line-height: 18px;
+    }
+
+    .pin-dots {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .pin-dot {
+      width: var(--dot-size);
+      height: var(--dot-size);
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      background: var(--bg);
+    }
+
+    .pin-dot--filled {
+      background: var(--primary);
+    }
+
+    .keypad {
+      width: 260px;
+      margin: 0 auto;
+    }
+
+    .keypad-row {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-bottom: 12px;
+    }
+
+    .key {
+      width: var(--key-size);
+      height: var(--key-size);
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 22px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(6, 78, 59, 0.2);
+    }
+
+    .key--ghost {
+      visibility: hidden;
+    }
+
+    .key--back svg {
+      width: 22px;
+      height: 22px;
+      fill: #fff;
+    }
+
+    .fingerprint-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      margin-top: 18px;
+      padding: 12px 16px;
+      background: transparent;
+      border: 1.5px solid #d9e7dc;
+      border-radius: 18px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    .fingerprint-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: var(--primary);
+    }
+
+    .password-link {
+      display: block;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    .nav-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: var(--nav-bar);
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    Figma import (html.to.design):
+      Viewport: 390 px
+      Theme:    Light
+    Frame size: 390 × 844 px
+
+    Screen: Login with MPIN (Unlock)
+  -->
+  <div class="screen">
+
+    <div class="status-bar" aria-hidden="true">
+      <span>10:41</span>
+      <span class="status-icons">
+        <span>●●●●</span>
+        <span>WiFi</span>
+        <span>84%</span>
+      </span>
+    </div>
+
+    <div class="header">
+      <svg class="header-wave" viewBox="0 0 390 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="headerGrad" x1="0" y1="0" x2="390" y2="160" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#064E3B"/>
+            <stop offset="100%" stop-color="#22C55E"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#headerGrad)" d="M0,0 L390,0 L390,124 C304,154 218,132 187,116 C117,90 78,122 0,110 Z"/>
+        <circle cx="58" cy="36" r="32" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <circle cx="128" cy="48" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <circle cx="198" cy="36" r="32" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <circle cx="268" cy="48" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      </svg>
+      <div class="header-branding">
+        <div class="brand-text">
+          <h1>IRemember</h1>
+          <p>Never lose track again</p>
+        </div>
+        <div class="brand-mascot" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-title">Enter your MPIN</div>
+      <div class="title-accent"></div>
+      <div class="page-subtitle">you@email.com</div>
+
+      <div class="pin-dots">
+        <div class="pin-dot pin-dot--filled"></div>
+        <div class="pin-dot pin-dot--filled"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+
+      <div class="keypad">
+        <div class="keypad-row">
+          <div class="key">1</div>
+          <div class="key">2</div>
+          <div class="key">3</div>
+        </div>
+        <div class="keypad-row">
+          <div class="key">4</div>
+          <div class="key">5</div>
+          <div class="key">6</div>
+        </div>
+        <div class="keypad-row">
+          <div class="key">7</div>
+          <div class="key">8</div>
+          <div class="key">9</div>
+        </div>
+        <div class="keypad-row">
+          <div class="key key--ghost">×</div>
+          <div class="key">0</div>
+          <div class="key key--back">
+            <svg viewBox="0 0 24 24">
+              <path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="fingerprint-btn">
+        <svg viewBox="0 0 24 24">
+          <path d="M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12.01 3c-1.98 0-3.86.47-5.57 1.41-.24.13-.54.04-.68-.2-.13-.24-.04-.55.2-.68C7.82 2.52 9.86 2 12.01 2c2.13 0 3.99.47 6.03 1.52.25.13.34.43.21.67-.09.18-.26.28-.44.28zM3.5 9.72c-.1 0-.2-.03-.29-.09-.23-.14-.3-.44-.15-.67.49-.76 1.09-1.46 1.78-2.08.2-.18.51-.17.71.02.18.2.17.51-.02.71-.59.52-1.08 1.11-1.49 1.75-.11.16-.29.25-.54.25zm14.77 10.86c-.19 0-.38-.09-.49-.26-.15-.22-.09-.52.12-.67.87-.65 1.63-1.45 2.24-2.36.14-.22.44-.28.66-.14.22.14.28.44.14.66-.68 1.01-1.54 1.91-2.53 2.66-.1.07-.22.11-.34.11zm-8.77-1.7c-2.1 0-3.81-1.71-3.81-3.81s1.71-3.81 3.81-3.81 3.81 1.71 3.81 3.81-1.71 3.81-3.81 3.81zm0-6.12c-1.27 0-2.31 1.04-2.31 2.31s1.04 2.31 2.31 2.31 2.31-1.04 2.31-2.31-1.04-2.31-2.31-2.31z"/>
+        </svg>
+        <span>Use fingerprint</span>
+      </div>
+
+      <div class="password-link">Sign in with password</div>
+    </div>
+
+    <div class="nav-bar" aria-hidden="true"></div>
+
+  </div>
+
+</body>
+</html>

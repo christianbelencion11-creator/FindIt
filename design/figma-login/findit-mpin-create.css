@@ -1,0 +1,325 @@
+/* FindIt — Create MPIN (Setup PIN step 1)
+   Viewport: 390 × 844 px (mobile)
+   Theme: Light
+   Matches Android: AuthShell.kt + PinScreens.kt + PinKeypad.kt */
+
+:root {
+  --primary: #16a34a;
+  --primary-container: #ddfce8;
+  --gradient-start: #064e3b;
+  --gradient-end: #22c55e;
+  --bg: #ffffff;
+  --text: #102015;
+  --text-muted: #66756a;
+  --error: #dc2626;
+  --nav-bar: #000000;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-xxl: 24px;
+  --spacing-xxxl: 32px;
+
+  --radius-card: 18px;
+  --header-height: 184px;
+  --screen-width: 390px;
+  --screen-height: 844px;
+  --key-size: 72px;
+  --dot-size: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #e8e8e8;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.screen {
+  width: var(--screen-width);
+  min-height: var(--screen-height);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ===== Status bar ===== */
+.status-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  pointer-events: none;
+}
+
+.status-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+/* ===== Green wave header ===== */
+.header {
+  position: relative;
+  height: var(--header-height);
+  flex-shrink: 0;
+}
+
+.header-wave {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.header-branding {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 44px var(--spacing-xl) 0;
+  height: 100%;
+}
+
+.brand-text h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+  line-height: 34px;
+}
+
+.brand-text p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: var(--spacing-xs);
+  line-height: 21px;
+}
+
+.brand-mascot {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  margin-right: var(--spacing-xs);
+}
+
+/* ===== Main content ===== */
+.content {
+  flex: 1;
+  padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+  line-height: 34px;
+}
+
+.title-accent {
+  width: 18%;
+  height: 3px;
+  background: var(--primary);
+  margin-top: var(--spacing-xs);
+  border-radius: 2px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 21px;
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-xxl);
+}
+
+/* ===== PIN section (centered) ===== */
+.pin-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+}
+
+/* PIN dots */
+.pin-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+.pin-dot {
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--primary);
+  flex-shrink: 0;
+}
+
+.pin-dot--filled {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Keypad */
+.keypad {
+  width: 100%;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.keypad-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xl);
+  width: 100%;
+}
+
+.keypad-key {
+  width: var(--key-size);
+  height: var(--key-size);
+  min-width: var(--key-size);
+  min-height: var(--key-size);
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(6, 78, 59, 0.2);
+  flex-shrink: 0;
+}
+
+.keypad-key--ghost {
+  visibility: hidden;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.keypad-key--backspace svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+/* ===== Biometric toggle ===== */
+.biometric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(221, 252, 232, 0.55);
+  border-radius: var(--radius-card);
+  margin-top: var(--spacing-lg);
+  flex-shrink: 0;
+}
+
+.biometric-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 14px;
+  color: var(--text);
+  line-height: 21px;
+}
+
+.biometric-label svg {
+  width: 24px;
+  height: 24px;
+  fill: var(--primary);
+  flex-shrink: 0;
+}
+
+/* Toggle switch */
+.toggle {
+  position: relative;
+  width: 52px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: #c5e8d0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.toggle input:checked + .toggle-track {
+  background: var(--primary);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+  pointer-events: none;
+}
+
+.toggle input:checked ~ .toggle-thumb {
+  transform: translateX(20px);
+}
+
+/* ===== System navigation bar ===== */
+.nav-bar {
+  height: 48px;
+  background: var(--nav-bar);
+  flex-shrink: 0;
+}

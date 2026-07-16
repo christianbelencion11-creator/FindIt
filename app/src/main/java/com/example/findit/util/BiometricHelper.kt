@@ -17,7 +17,7 @@ object BiometricHelper {
 
     fun showPrompt(
         activity: FragmentActivity,
-        title: String = "Unlock FindIt",
+        title: String = "Unlock IRemember",
         subtitle: String = "Confirm your identity to continue",
         onSuccess: () -> Unit,
         onError: (String) -> Unit = {}

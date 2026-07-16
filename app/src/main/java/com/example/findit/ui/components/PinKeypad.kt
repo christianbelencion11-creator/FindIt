@@ -1,6 +1,7 @@
 package com.example.findit.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,13 +37,23 @@ fun PinDots(
         verticalAlignment = Alignment.CenterVertically
     ) {
         repeat(pinLength) { index ->
+            val filled = index < enteredLength
             Box(
                 modifier = Modifier
-                    .size(14.dp)
+                    .size(16.dp)
                     .clip(CircleShape)
-                    .background(
-                        if (index < enteredLength) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+                    .then(
+                        if (filled) {
+                            Modifier.background(MaterialTheme.colorScheme.primary)
+                        } else {
+                            Modifier
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(
+                                    width = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = CircleShape
+                                )
+                        }
                     )
             )
         }
@@ -53,17 +64,18 @@ fun PinDots(
 fun PinKeypad(
     onDigit: (String) -> Unit,
     onBackspace: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCancel: (() -> Unit)? = null
 ) {
     val rows = listOf(
         listOf("1", "2", "3"),
         listOf("4", "5", "6"),
         listOf("7", "8", "9"),
-        listOf("", "0", "⌫")
+        listOf(if (onCancel != null) "Cancel" else "", "0", "⌫")
     )
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(Spacing.md),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         rows.forEach { row ->
@@ -74,14 +86,26 @@ fun PinKeypad(
             ) {
                 row.forEach { key ->
                     when (key) {
-                        "" -> Box(Modifier.size(66.dp))
+                        "" -> Box(Modifier.size(72.dp))
+                        "Cancel" -> PinKey(
+                            onClick = { onCancel?.invoke() },
+                            content = {
+                                Text(
+                                    text = "Cancel",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        )
                         "⌫" -> PinKey(
                             onClick = onBackspace,
                             content = {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Backspace,
                                     contentDescription = "Backspace",
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
                         )
@@ -91,7 +115,7 @@ fun PinKeypad(
                                 Text(
                                     text = key,
                                     style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Medium,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
@@ -111,12 +135,16 @@ private fun PinKey(
     Button(
         onClick = onClick,
         modifier = Modifier
-            .size(66.dp)
-            .defaultMinSize(minWidth = 66.dp, minHeight = 66.dp),
+            .size(72.dp)
+            .defaultMinSize(minWidth = 72.dp, minHeight = 72.dp),
         shape = CircleShape,
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.64f),
+            containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 6.dp
         ),
         contentPadding = ButtonDefaults.ContentPadding
     ) {

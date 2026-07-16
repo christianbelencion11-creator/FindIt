@@ -1,0 +1,337 @@
+/* FindIt Login — Figma transfer mockup
+   Viewport: 390 × 844 px (mobile)
+   Theme: Light
+   Matches Android: AuthShell.kt + LoginRegisterScreens.kt */
+
+:root {
+  --primary: #16a34a;
+  --gradient-start: #064e3b;
+  --gradient-end: #22c55e;
+  --bg: #ffffff;
+  --text: #102015;
+  --text-muted: #66756a;
+  --border: #d9e7dc;
+  --nav-bar: #000000;
+
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-xxl: 24px;
+  --spacing-xxxl: 32px;
+
+  --radius-field: 18px;
+  --radius-btn: 18px;
+  --radius-social: 16px;
+  --header-height: 184px;
+  --screen-width: 390px;
+  --screen-height: 844px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #e8e8e8;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Exact mobile frame for Figma html.to.design @ 390px */
+.screen {
+  width: var(--screen-width);
+  min-height: var(--screen-height);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ===== Status bar ===== */
+.status-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  pointer-events: none;
+}
+
+.status-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+/* ===== Green wave header ===== */
+.header {
+  position: relative;
+  height: var(--header-height);
+  flex-shrink: 0;
+}
+
+.header-wave {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.header-branding {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 44px var(--spacing-xl) 0;
+  height: 100%;
+}
+
+.brand-text h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+  line-height: 34px;
+}
+
+.brand-text p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: var(--spacing-xxs);
+  line-height: 21px;
+}
+
+.brand-mascot {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  margin-right: var(--spacing-xs);
+}
+
+/* ===== Main content ===== */
+.content {
+  flex: 1;
+  padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-xxxl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+  line-height: 34px;
+}
+
+.title-accent {
+  width: 18%;
+  height: 3px;
+  background: var(--primary);
+  margin-top: calc(-1 * var(--spacing-md) + var(--spacing-xs));
+  margin-bottom: 0;
+  border-radius: 2px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 21px;
+  margin-bottom: var(--spacing-md);
+  margin-top: calc(-1 * var(--spacing-sm));
+}
+
+/* ===== Material3 Outlined Text Field ===== */
+.md-field {
+  position: relative;
+  width: 100%;
+}
+
+.md-field input {
+  width: 100%;
+  height: 56px;
+  padding: 24px 16px 8px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-field);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.md-field input:focus {
+  border-color: var(--primary);
+  border-width: 2px;
+  padding: 23px 15px 7px;
+}
+
+.md-field label {
+  position: absolute;
+  left: 16px;
+  top: 18px;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: top 0.15s ease, font-size 0.15s ease, color 0.15s ease, left 0.15s ease;
+  background: transparent;
+  line-height: 20px;
+}
+
+.md-field input:focus + label,
+.md-field input:not(:placeholder-shown) + label {
+  top: 8px;
+  left: 16px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.md-field input:focus + label {
+  color: var(--primary);
+}
+
+.md-field input:not(:placeholder-shown):not(:focus) + label {
+  color: var(--text-muted);
+}
+
+.md-field--password input {
+  padding-right: 48px;
+}
+
+.md-field--password input:focus {
+  padding-right: 47px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.toggle-password svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* ===== Forgot password ===== */
+.forgot-link {
+  display: block;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: none;
+  letter-spacing: 0.1px;
+  margin-top: calc(-1 * var(--spacing-xs));
+}
+
+/* ===== Sign In button ===== */
+.btn-primary {
+  width: 100%;
+  height: 54px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-btn);
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: var(--spacing-sm);
+  letter-spacing: 0;
+  line-height: 22px;
+}
+
+/* ===== Divider ===== */
+.divider-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 18px;
+  margin-top: var(--spacing-xs);
+}
+
+/* ===== Social buttons ===== */
+.social-row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.btn-social {
+  flex: 1;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-social);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 0.1px;
+}
+
+.btn-social img,
+.btn-social svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+/* ===== Footer link ===== */
+.footer-link {
+  text-align: center;
+  margin-top: var(--spacing-lg);
+  padding-bottom: var(--spacing-sm);
+}
+
+.footer-link a {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: none;
+  letter-spacing: 0.1px;
+}
+
+/* ===== System navigation bar ===== */
+.nav-bar {
+  height: 48px;
+  background: var(--nav-bar);
+  flex-shrink: 0;
+}
