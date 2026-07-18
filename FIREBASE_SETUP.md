@@ -1,6 +1,6 @@
-# Firebase Setup for FindIt
+# Firebase Setup for IRemember
 
-FindIt uses **Firebase Authentication** for email/password login, Google Sign-In, and **email OTP** password reset (via Cloud Functions). The Gradle SDK is already configured — you mainly need a valid `google-services.json` and deployed Cloud Functions for OTP.
+IRemember uses **Firebase Authentication** for email/password login, Google Sign-In, and **email OTP** password reset (via Cloud Functions). The Gradle SDK is already configured — you mainly need a valid `google-services.json` and deployed Cloud Functions for OTP.
 
 **Current SDK versions (in `gradle/libs.versions.toml`):**
 
@@ -39,7 +39,7 @@ Firebase Console → **Authentication** → **Sign-in method**:
 ## 4. Add SHA-1 fingerprint (required for Google Sign-In)
 
 ```powershell
-cd c:\flutterprojects\FindIt
+cd c:\flutterprojects\IRemember
 .\gradlew signingReport
 ```
 
@@ -64,7 +64,7 @@ Forgot password sends a **6-digit OTP email** via Cloud Functions in [`functions
 ### One-time setup
 
 ```powershell
-cd c:\flutterprojects\FindIt
+cd c:\flutterprojects\IRemember
 npm install -g firebase-tools
 firebase login
 firebase use findit-73919

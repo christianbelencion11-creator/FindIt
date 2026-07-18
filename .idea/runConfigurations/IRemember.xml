@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="FindIt" type="AndroidRunConfigurationType" factoryName="Android App">
-    <module name="FindIt.app.main" />
+  <configuration default="false" name="IRemember" type="AndroidRunConfigurationType" factoryName="Android App">
+    <module name="IRemember.app.main" />
     <option name="DEPLOY" value="true" />
     <option name="MODE" value="default_activity" />
     <method v="2">

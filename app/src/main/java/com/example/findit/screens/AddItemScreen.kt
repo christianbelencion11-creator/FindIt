@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Inventory2
@@ -43,19 +44,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -65,10 +66,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.example.findit.ui.components.CategoryChip
+import com.example.findit.ui.components.HeaderIconButton
+import com.example.findit.ui.components.ItemSavedSuccessDialog
 import com.example.findit.ui.components.PremiumScaffold
 import com.example.findit.ui.components.RemindMeCard
 import com.example.findit.ui.components.TabMenuHeader
@@ -77,7 +81,6 @@ import com.example.findit.ui.theme.Spacing
 import com.example.findit.ui.theme.mainTabBottomScrollPadding
 import com.example.findit.viewmodel.ItemViewModel
 import java.io.File
-import kotlinx.coroutines.launch
 
 private val predefinedCategories = listOf(
     "Electronics", "Keys", "Documents", "Wallet", "Bags", "Others"
@@ -92,8 +95,12 @@ fun AddItemScreen(
     onSaveSuccess: () -> Unit = {},
     onMenuClick: () -> Unit = {},
     onUserInteraction: () -> Unit = {},
-    bottomNavVisible: Boolean = true
+    bottomNavVisible: Boolean = true,
+    itemId: Long? = null
 ) {
+    val isEditMode = itemId != null && itemId > 0L
+    val existingItem by viewModel.itemById(itemId ?: 0L).collectAsState(initial = null)
+
     var itemName by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
@@ -102,12 +109,28 @@ fun AddItemScreen(
     var remindEnabled by remember { mutableStateOf(false) }
     var remindHour by remember { mutableIntStateOf(8) }
     var remindMinute by remember { mutableIntStateOf(0) }
+    var formLoaded by remember { mutableStateOf(!isEditMode) }
     var showPhotoSourcePicker by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var savedItemName by remember { mutableStateOf("") }
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     val dashColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.85f)
+
+    LaunchedEffect(existingItem?.id) {
+        val item = existingItem
+        if (isEditMode && item != null && !formLoaded) {
+            itemName = item.name
+            location = item.location
+            category = item.category
+            notes = item.notes
+            imageUri = item.imageUri
+            remindEnabled = item.remindEnabled
+            remindHour = item.remindHour
+            remindMinute = item.remindMinute
+            formLoaded = true
+        }
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -123,18 +146,70 @@ fun AddItemScreen(
 
     val bottomScrollPadding = mainTabBottomScrollPadding(bottomNavVisible)
     val canSave = itemName.isNotBlank() && location.isNotBlank() && category.isNotBlank()
+    val headerTitle = if (isEditMode) "Edit Item" else "Add Item"
+    val headerSubtitle = if (isEditMode) {
+        "Update this item in your collection"
+    } else {
+        "Save a new item to your collection"
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         PremiumScaffold(
             onUserInteraction = onUserInteraction,
-            headerHeight = Dimensions.headerContentWithMenu,
+            headerHeight = if (isEditMode && !embedded) {
+                Dimensions.headerContentStd
+            } else {
+                Dimensions.headerContentWithMenu
+            },
             headerContent = { collapseFraction ->
-                TabMenuHeader(
-                    title = "Add Item",
-                    subtitle = "Save a new item to your collection",
-                    onMenuClick = onMenuClick,
-                    collapseFraction = collapseFraction
-                )
+                if (isEditMode && !embedded) {
+                    val secondaryAlpha = (1f - collapseFraction).coerceIn(0f, 1f)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                start = Spacing.xl,
+                                end = Spacing.xl,
+                                top = Spacing.md,
+                                bottom = Spacing.sm
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+                    ) {
+                        HeaderIconButton(
+                            onClick = onBackClick,
+                            containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.14f),
+                            iconTint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.alpha(secondaryAlpha)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = headerTitle,
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = headerSubtitle,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .padding(top = 2.dp)
+                                    .alpha(secondaryAlpha)
+                            )
+                        }
+                    }
+                } else {
+                    TabMenuHeader(
+                        title = headerTitle,
+                        subtitle = headerSubtitle,
+                        onMenuClick = onMenuClick,
+                        collapseFraction = collapseFraction
+                    )
+                }
             }
         ) { scrollModifier ->
             Column(
@@ -303,7 +378,26 @@ fun AddItemScreen(
 
                 Button(
                     onClick = {
-                        if (canSave) {
+                        if (!canSave) return@Button
+                        if (isEditMode) {
+                            viewModel.updateItem(
+                                itemId = itemId!!,
+                                name = itemName,
+                                location = location,
+                                category = category,
+                                notes = notes,
+                                imageUri = imageUri,
+                                remindEnabled = remindEnabled,
+                                remindHour = remindHour,
+                                remindMinute = remindMinute,
+                                onUpdated = { ok ->
+                                    if (ok) {
+                                        savedItemName = itemName
+                                        showSuccessDialog = true
+                                    }
+                                }
+                            )
+                        } else {
                             viewModel.saveItem(
                                 name = itemName,
                                 location = location,
@@ -314,6 +408,7 @@ fun AddItemScreen(
                                 remindHour = remindHour,
                                 remindMinute = remindMinute,
                                 onSaved = {
+                                    savedItemName = itemName
                                     itemName = ""
                                     location = ""
                                     category = ""
@@ -322,10 +417,7 @@ fun AddItemScreen(
                                     remindEnabled = false
                                     remindHour = 8
                                     remindMinute = 0
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("Item saved successfully")
-                                    }
-                                    onSaveSuccess()
+                                    showSuccessDialog = true
                                 }
                             )
                         }
@@ -334,7 +426,7 @@ fun AddItemScreen(
                         .fillMaxWidth()
                         .height(54.dp),
                     shape = RoundedCornerShape(16.dp),
-                    enabled = canSave,
+                    enabled = canSave && (!isEditMode || formLoaded),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
@@ -347,7 +439,7 @@ fun AddItemScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Add,
+                            imageVector = if (isEditMode) Icons.Default.Check else Icons.Default.Add,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(18.dp)
@@ -355,7 +447,7 @@ fun AddItemScreen(
                     }
                     Spacer(Modifier.size(Spacing.sm))
                     Text(
-                        "Save Item",
+                        if (isEditMode) "Save Changes" else "Save Item",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
@@ -424,10 +516,16 @@ fun AddItemScreen(
             )
         }
 
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
+        if (showSuccessDialog) {
+            ItemSavedSuccessDialog(
+                itemName = savedItemName,
+                updated = isEditMode,
+                onDone = {
+                    showSuccessDialog = false
+                    onSaveSuccess()
+                }
+            )
+        }
     }
 }
 

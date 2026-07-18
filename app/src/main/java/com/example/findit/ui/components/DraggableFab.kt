@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.example.findit.ui.theme.Dimensions
 import com.example.findit.ui.theme.Spacing
 import com.example.findit.util.UiPreferences
 import kotlin.math.abs
@@ -45,12 +46,23 @@ fun DraggableFab(
     uiPreferences: UiPreferences,
     modifier: Modifier = Modifier
 ) {
-    var offsetX by remember { mutableFloatStateOf(uiPreferences.getFabOffsetX()) }
-    var offsetY by remember { mutableFloatStateOf(uiPreferences.getFabOffsetY()) }
-
     val density = LocalDensity.current
     val fabSizePx = with(density) { FabSize.toPx() }
     val marginPx = with(density) { FabMargin.toPx() }
+    // Keep the FAB on the side above the floating bottom nav (not buried under it).
+    val bottomClearancePx = with(density) { Dimensions.floatingBottomNavClearance.toPx() }
+    val defaultOffsetY = -bottomClearancePx
+
+    var offsetX by remember {
+        mutableFloatStateOf(
+            if (uiPreferences.hasFabOffset()) uiPreferences.getFabOffsetX() else 0f
+        )
+    }
+    var offsetY by remember {
+        mutableFloatStateOf(
+            if (uiPreferences.hasFabOffset()) uiPreferences.getFabOffsetY() else defaultOffsetY
+        )
+    }
 
     BoxWithConstraints(
         modifier = modifier
@@ -60,9 +72,11 @@ fun DraggableFab(
     ) {
         val maxOffsetX = (constraints.maxWidth - fabSizePx - marginPx * 2).coerceAtLeast(0f)
         val maxOffsetY = (constraints.maxHeight - fabSizePx - marginPx * 2).coerceAtLeast(0f)
+        val minOffsetY = -maxOffsetY
+        val maxAllowedY = (-bottomClearancePx).coerceAtLeast(minOffsetY)
 
         offsetX = offsetX.coerceIn(-maxOffsetX, 0f)
-        offsetY = offsetY.coerceIn(-maxOffsetY, 0f)
+        offsetY = offsetY.coerceIn(minOffsetY, maxAllowedY)
 
         Box(
             modifier = Modifier
@@ -72,7 +86,7 @@ fun DraggableFab(
                 .shadow(6.dp, CircleShape)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primary)
-                .pointerInput(maxOffsetX, maxOffsetY) {
+                .pointerInput(maxOffsetX, minOffsetY, maxAllowedY) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
                         var dragDistance = 0f
@@ -81,7 +95,7 @@ fun DraggableFab(
                             val delta = change.positionChange()
                             dragDistance += abs(delta.x) + abs(delta.y)
                             offsetX = (offsetX + delta.x).coerceIn(-maxOffsetX, 0f)
-                            offsetY = (offsetY + delta.y).coerceIn(-maxOffsetY, 0f)
+                            offsetY = (offsetY + delta.y).coerceIn(minOffsetY, maxAllowedY)
                             change.consume()
                         }
 

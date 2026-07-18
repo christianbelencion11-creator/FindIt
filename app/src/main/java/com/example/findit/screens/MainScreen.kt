@@ -46,6 +46,7 @@ private const val NAV_IDLE_HIDE_MS = 4_000L
 fun MainScreen(
     viewModel: ItemViewModel,
     onItemClick: (Long) -> Unit,
+    onEditItem: (Long) -> Unit = {},
     themeMode: com.example.findit.ui.theme.ThemeMode = com.example.findit.ui.theme.ThemeMode.Auto,
     onThemeModeChanged: (com.example.findit.ui.theme.ThemeMode) -> Unit = {},
     profileImageUri: String = "",
@@ -61,6 +62,7 @@ fun MainScreen(
     onProfileDetailsChanged: (ProfileDetailsUpdate) -> Unit = {},
     onChangePassword: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
+    onHistoryClick: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(BottomNavTab.Home) }
@@ -128,6 +130,10 @@ fun MainScreen(
                         onUserInteraction()
                         closeDrawerThen { onNotificationsClick() }
                     },
+                    onHistory = {
+                        onUserInteraction()
+                        closeDrawerThen { onHistoryClick() }
+                    },
                     onProfile = {
                         onUserInteraction()
                         closeDrawerThen { selectedTab = BottomNavTab.Profile }
@@ -176,6 +182,7 @@ fun MainScreen(
                             onUserInteraction()
                             selectedTab = BottomNavTab.AddItem
                         },
+                        onEditItem = onEditItem,
                         onProfileClick = {
                             onUserInteraction()
                             selectedTab = BottomNavTab.Profile
@@ -209,6 +216,10 @@ fun MainScreen(
                         viewModel = viewModel,
                         onItemClick = onItemClick,
                         embedded = true,
+                        onAddItemClick = {
+                            onUserInteraction()
+                            selectedTab = BottomNavTab.AddItem
+                        },
                         onMenuClick = {
                             onUserInteraction()
                             scope.launch { drawerState.open() }

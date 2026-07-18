@@ -9,6 +9,9 @@ class UiPreferences(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+    fun hasFabOffset(): Boolean =
+        prefs.contains(KEY_FAB_OFFSET_X) || prefs.contains(KEY_FAB_OFFSET_Y)
+
     fun getFabOffsetX(): Float = prefs.getFloat(KEY_FAB_OFFSET_X, 0f)
 
     fun getFabOffsetY(): Float = prefs.getFloat(KEY_FAB_OFFSET_Y, 0f)

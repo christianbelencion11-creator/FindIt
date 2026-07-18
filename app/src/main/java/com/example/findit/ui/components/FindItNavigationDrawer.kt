@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.PersonOutline
@@ -56,6 +57,7 @@ fun FindItNavigationDrawerContent(
     onAddItem: () -> Unit,
     onAlerts: () -> Unit,
     onNews: () -> Unit,
+    onHistory: () -> Unit,
     onProfile: () -> Unit,
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier
@@ -151,6 +153,12 @@ fun FindItNavigationDrawerContent(
                 title = "News",
                 subtitle = "Headlines near you",
                 onClick = onNews
+            )
+            DrawerMenuRow(
+                icon = Icons.Outlined.History,
+                title = "History",
+                subtitle = "Found, edited, and deleted items",
+                onClick = onHistory
             )
             DrawerMenuRow(
                 icon = Icons.Outlined.PersonOutline,

@@ -88,6 +88,7 @@ fun HomeScreen(
     onItemClick: (Long) -> Unit,
     embedded: Boolean = false,
     onAddItemClick: () -> Unit = {},
+    onEditItem: (Long) -> Unit = {},
     onProfileClick: () -> Unit = {},
     onMenuClick: () -> Unit = {},
     themeMode: ThemeMode = ThemeMode.Auto,
@@ -232,6 +233,7 @@ fun HomeScreen(
                     ItemCard(
                         item = item,
                         onClick = { onItemClick(item.id) },
+                        onEdit = { onEditItem(item.id) },
                         onDeleteFound = if (item.lastFoundAt > 0L) {
                             { pendingDeleteItem = item }
                         } else {

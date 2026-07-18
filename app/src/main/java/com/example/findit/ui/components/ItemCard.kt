@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,7 +43,8 @@ fun ItemCard(
     item: Item,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onDeleteFound: (() -> Unit)? = null
+    onDeleteFound: (() -> Unit)? = null,
+    onEdit: (() -> Unit)? = null
 ) {
     Card(
         onClick = onClick,
@@ -117,7 +119,9 @@ fun ItemCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     CategoryBadge(category = item.category)
-                    ItemStatusBadge(found = item.lastFoundAt > 0)
+                    if (item.lastFoundAt > 0) {
+                        ItemStatusBadge(found = true)
+                    }
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -147,7 +151,16 @@ fun ItemCard(
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
                     )
                 }
-            } else {
+            }
+            if (onEdit != null) {
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit item",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                    )
+                }
+            } else if (item.lastFoundAt == 0L || onDeleteFound == null) {
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,

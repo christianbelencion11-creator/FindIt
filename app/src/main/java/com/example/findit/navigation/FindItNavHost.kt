@@ -20,6 +20,8 @@ import com.example.findit.auth.FirebaseAuthRepository
 import com.example.findit.auth.SecretRecoveryRepository
 import com.example.findit.auth.UsernameAuth
 import com.example.findit.screens.ItemDetailScreen
+import com.example.findit.screens.AddItemScreen
+import com.example.findit.screens.HistoryScreen
 import com.example.findit.screens.MainScreen
 import com.example.findit.screens.NewsScreen
 import com.example.findit.screens.SplashScreen
@@ -236,6 +238,9 @@ fun FindItNavHost(
                 onItemClick = { itemId ->
                     navController.navigate(Routes.itemDetail(itemId))
                 },
+                onEditItem = { itemId ->
+                    navController.navigate(Routes.editItem(itemId))
+                },
                 themeMode = themeMode,
                 onThemeModeChanged = onThemeModeChanged,
                 profileImageUri = profileImageUri,
@@ -254,6 +259,9 @@ fun FindItNavHost(
                 },
                 onNotificationsClick = {
                     navController.navigate(Routes.NEWS)
+                },
+                onHistoryClick = {
+                    navController.navigate(Routes.HISTORY)
                 },
                 onLogout = {
                     authRepository.signOut()
@@ -279,6 +287,16 @@ fun FindItNavHost(
             )
         }
 
+        composable(Routes.HISTORY) {
+            HistoryScreen(
+                viewModel = viewModel,
+                onBackClick = { navController.popBackStack() },
+                onItemClick = { itemId ->
+                    navController.navigate(Routes.itemDetail(itemId))
+                }
+            )
+        }
+
         composable(
             route = Routes.ITEM_DETAIL,
             arguments = listOf(
@@ -295,7 +313,31 @@ fun FindItNavHost(
             ItemDetailScreen(
                 viewModel = viewModel,
                 itemId = itemId,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onEditClick = { navController.navigate(Routes.editItem(itemId)) }
+            )
+        }
+
+        composable(
+            route = Routes.EDIT_ITEM,
+            arguments = listOf(
+                navArgument("itemId") { type = NavType.LongType }
+            ),
+            enterTransition = {
+                fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 4 }
+            },
+            exitTransition = {
+                fadeOut(tween(300)) + slideOutVertically(tween(300)) { it / 4 }
+            }
+        ) { backStackEntry ->
+            val itemId = backStackEntry.arguments?.getLong("itemId") ?: 0L
+            AddItemScreen(
+                viewModel = viewModel,
+                itemId = itemId,
+                embedded = false,
+                bottomNavVisible = false,
+                onBackClick = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
             )
         }
     }

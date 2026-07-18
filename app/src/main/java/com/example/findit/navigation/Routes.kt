@@ -15,9 +15,13 @@ object Routes {
     const val PROFILE = "profile"
     const val CHANGE_PASSWORD = "change_password"
     const val NEWS = "news"
+    const val HISTORY = "history"
     const val ITEM_DETAIL = "item_detail/{itemId}"
+    const val EDIT_ITEM = "edit_item/{itemId}"
 
     fun itemDetail(itemId: Long) = "item_detail/$itemId"
+
+    fun editItem(itemId: Long) = "edit_item/$itemId"
 
     fun forgotPassword(username: String = ""): String {
         val encoded = java.net.URLEncoder.encode(username, Charsets.UTF_8.name())

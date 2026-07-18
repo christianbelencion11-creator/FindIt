@@ -1,7 +1,16 @@
 package com.example.findit.screens
 
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.speech.RecognizerIntent
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -33,10 +42,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.example.findit.model.Item
 import com.example.findit.ui.components.CategoryChip
+import com.example.findit.ui.components.DraggableFab
 import com.example.findit.ui.components.EmptyState
 import com.example.findit.ui.components.FindItSearchBar
 import com.example.findit.ui.components.ItemCard
@@ -45,7 +57,9 @@ import com.example.findit.ui.components.TabMenuHeader
 import com.example.findit.ui.theme.Dimensions
 import com.example.findit.ui.theme.Spacing
 import com.example.findit.ui.theme.mainTabBottomScrollPadding
+import com.example.findit.util.UiPreferences
 import com.example.findit.viewmodel.ItemViewModel
+import java.util.Locale
 
 private val searchCategories = listOf(
     "Electronics", "Keys", "Documents", "Wallet", "Bags", "Others"
@@ -64,10 +78,13 @@ fun SearchScreen(
     onItemClick: (Long) -> Unit,
     onBackClick: () -> Unit = {},
     embedded: Boolean = false,
+    onAddItemClick: () -> Unit = {},
     onMenuClick: () -> Unit = {},
     onUserInteraction: () -> Unit = {},
     bottomNavVisible: Boolean = true
 ) {
+    val context = LocalContext.current
+    val uiPreferences = remember(context) { UiPreferences(context) }
     val query by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
     val allItems by viewModel.allItems.collectAsState()
@@ -76,6 +93,67 @@ fun SearchScreen(
     var statusFilter by remember { mutableStateOf(SearchStatusFilter.All) }
     var showAllRecent by remember { mutableStateOf(false) }
     var showFilterSheet by remember { mutableStateOf(false) }
+    var isListening by remember { mutableStateOf(false) }
+
+    val speechLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        isListening = false
+        if (result.resultCode != Activity.RESULT_OK) return@rememberLauncherForActivityResult
+        val spoken = result.data
+            ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            ?.firstOrNull()
+            ?.trim()
+            .orEmpty()
+        if (spoken.isNotEmpty()) {
+            viewModel.updateSearchQuery(spoken)
+            showAllRecent = false
+        }
+    }
+
+    fun launchSpeechRecognition() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Say an item name…")
+        }
+        try {
+            isListening = true
+            speechLauncher.launch(intent)
+        } catch (_: ActivityNotFoundException) {
+            isListening = false
+            Toast.makeText(context, "Speech recognition not available", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val micPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            launchSpeechRecognition()
+        } else {
+            Toast.makeText(
+                context,
+                "Microphone permission is needed for voice search",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    fun onVoiceSearchClick() {
+        val granted = ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+        if (granted) {
+            launchSpeechRecognition()
+        } else {
+            micPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+        }
+    }
 
     val baseItems: List<Item> = remember(query, searchResults, allItems) {
         if (query.isBlank()) allItems.sortedByDescending { it.dateCreated }
@@ -99,6 +177,7 @@ fun SearchScreen(
     val sectionTitle = if (query.isBlank()) "Recent Items" else "Results"
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    Box(modifier = Modifier.fillMaxSize()) {
     PremiumScaffold(
         onUserInteraction = onUserInteraction,
         headerHeight = Dimensions.headerContentWithMenu,
@@ -132,7 +211,9 @@ fun SearchScreen(
                             showAllRecent = false
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        onFilterClick = { showFilterSheet = true }
+                        onFilterClick = { showFilterSheet = true },
+                        onVoiceClick = { onVoiceSearchClick() },
+                        isListening = isListening
                     )
                     if (query.isNotBlank()) {
                         Text(
@@ -222,6 +303,11 @@ fun SearchScreen(
                 }
             }
         }
+    }
+        DraggableFab(
+            onClick = onAddItemClick,
+            uiPreferences = uiPreferences
+        )
     }
 
     if (showFilterSheet) {

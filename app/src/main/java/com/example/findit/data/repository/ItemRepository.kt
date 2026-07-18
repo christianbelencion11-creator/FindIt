@@ -1,9 +1,13 @@
 package com.example.findit.data.repository
 
 import com.example.findit.data.local.dao.ItemDao
+import com.example.findit.data.local.dao.ItemHistoryDao
 import com.example.findit.data.local.entity.toEntity
 import com.example.findit.data.local.entity.toItem
+import com.example.findit.data.local.entity.toItemHistory
+import com.example.findit.model.HistoryAction
 import com.example.findit.model.Item
+import com.example.findit.model.ItemHistory
 import com.example.findit.util.ReminderTimeUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +18,10 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ItemRepository(private val itemDao: ItemDao) {
+class ItemRepository(
+    private val itemDao: ItemDao,
+    private val historyDao: ItemHistoryDao
+) {
 
     private val _currentOwnerUid = MutableStateFlow("")
     val currentOwnerUid = _currentOwnerUid.asStateFlow()
@@ -29,6 +36,16 @@ class ItemRepository(private val itemDao: ItemDao) {
         } else {
             itemDao.getAllItems(ownerUid).map { entities ->
                 entities.map { it.toItem() }
+            }
+        }
+    }
+
+    val historyEntries: Flow<List<ItemHistory>> = _currentOwnerUid.flatMapLatest { ownerUid ->
+        if (ownerUid.isBlank()) {
+            flowOf(emptyList())
+        } else {
+            historyDao.observeAll(ownerUid).map { entities ->
+                entities.map { it.toItemHistory() }
             }
         }
     }
@@ -73,10 +90,35 @@ class ItemRepository(private val itemDao: ItemDao) {
         return itemDao.insertItem(item.copy(ownerUid = ownerUid).toEntity())
     }
 
+    suspend fun updateItem(item: Item): Boolean {
+        val ownerUid = _currentOwnerUid.value
+        if (ownerUid.isBlank() || item.id <= 0L) return false
+        if (item.ownerUid.isNotBlank() && item.ownerUid != ownerUid) return false
+        val updated = itemDao.updateItem(item.copy(ownerUid = ownerUid).toEntity())
+        if (updated > 0) {
+            insertHistory(
+                itemId = item.id,
+                itemName = item.name,
+                action = HistoryAction.EDITED,
+                detail = item.location.ifBlank { "Updated item details" }
+            )
+        }
+        return updated > 0
+    }
+
     suspend fun markItemFound(itemId: Long): Boolean {
         val ownerUid = _currentOwnerUid.value
         if (ownerUid.isBlank()) return false
+        val existing = getItemByIdOnce(itemId)
         val updated = itemDao.markItemFound(ownerUid, itemId, System.currentTimeMillis())
+        if (updated > 0 && existing != null) {
+            insertHistory(
+                itemId = itemId,
+                itemName = existing.name,
+                action = HistoryAction.FOUND,
+                detail = existing.location.ifBlank { "Marked as found" }
+            )
+        }
         return updated > 0
     }
 
@@ -118,7 +160,17 @@ class ItemRepository(private val itemDao: ItemDao) {
     suspend fun deleteItem(itemId: Long): Boolean {
         val ownerUid = _currentOwnerUid.value
         if (ownerUid.isBlank()) return false
-        return itemDao.deleteItem(ownerUid, itemId) > 0
+        val existing = getItemByIdOnce(itemId)
+        val deleted = itemDao.deleteItem(ownerUid, itemId) > 0
+        if (deleted && existing != null) {
+            insertHistory(
+                itemId = 0L,
+                itemName = existing.name,
+                action = HistoryAction.DELETED,
+                detail = existing.location.ifBlank { "Item removed" }
+            )
+        }
+        return deleted
     }
 
     /**
@@ -132,5 +184,30 @@ class ItemRepository(private val itemDao: ItemDao) {
         if (ids.isEmpty()) return emptyList()
         itemDao.deleteExpiredFoundItems(ownerUid, beforeTimestamp)
         return ids
+    }
+
+    suspend fun purgeExpiredHistory(beforeTimestamp: Long) {
+        val ownerUid = _currentOwnerUid.value
+        if (ownerUid.isBlank()) return
+        historyDao.deleteOlderThan(ownerUid, beforeTimestamp)
+    }
+
+    private suspend fun insertHistory(
+        itemId: Long,
+        itemName: String,
+        action: HistoryAction,
+        detail: String
+    ) {
+        val ownerUid = _currentOwnerUid.value
+        if (ownerUid.isBlank()) return
+        historyDao.insert(
+            ItemHistory(
+                ownerUid = ownerUid,
+                itemId = itemId,
+                itemName = itemName,
+                action = action,
+                detail = detail
+            ).toEntity()
+        )
     }
 }

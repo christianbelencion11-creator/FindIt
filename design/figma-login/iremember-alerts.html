@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=390, initial-scale=1.0" />
+  <title>IRemember — Alerts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* IRemember — Alerts / Notifications
+       Viewport: 390 × 844 · Theme: Light
+       Matches Android: AlertsScreen.kt
+       Paste this ENTIRE file into Figma html.to.design */
+
+    :root {
+      --primary: #16a34a;
+      --primary-deep: #064e3b;
+      --gradient-start: #064e3b;
+      --gradient-end: #22c55e;
+      --bg: #f7fbf6;
+      --surface: #ffffff;
+      --text: #102015;
+      --text-muted: #66756a;
+      --error: #e57373;
+      --nav-bar: #000000;
+      --screen-width: 390px;
+      --screen-height: 844px;
+      --radius-card: 20px;
+      --radius-btn: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e8e8e8;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .screen {
+      width: var(--screen-width);
+      height: var(--screen-height);
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 20px 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      pointer-events: none;
+    }
+
+    .status-icons { display: flex; gap: 6px; font-size: 12px; }
+
+    .header {
+      height: 140px;
+      flex-shrink: 0;
+      position: relative;
+      background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    }
+
+    .header-row {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 48px 20px 0;
+    }
+
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .back-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: #fff;
+    }
+
+    .header-text h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 32px;
+    }
+
+    .header-text p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-top: 2px;
+      line-height: 18px;
+    }
+
+    .content {
+      flex: 1;
+      overflow: hidden;
+      padding: 16px 20px 56px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .section-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: -6px 0 12px;
+      line-height: 16px;
+    }
+
+    .section-spacer { height: 12px; }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-card);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(16, 32, 21, 0.06);
+    }
+
+    .card-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .card-icon--primary { fill: var(--primary); }
+    .card-icon--error { fill: var(--error); }
+
+    .card-body { flex: 1; min-width: 0; }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 20px;
+    }
+
+    .card-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 16px;
+    }
+
+    .card-next {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--primary);
+      margin-top: 4px;
+      line-height: 16px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      flex: 1;
+      height: 40px;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+    }
+
+    .btn--outline {
+      background: transparent;
+      border: 1.5px solid #d9e7dc;
+      color: var(--text);
+    }
+
+    .btn--primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .open-link {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary);
+      align-self: center;
+      flex-shrink: 0;
+    }
+
+    .bottom-nav {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 28px;
+      height: 64px;
+      background: #1a2e22;
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 8px;
+      box-shadow: 0 8px 24px rgba(6, 78, 59, 0.28);
+    }
+
+    .nav-item {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+      fill: rgba(255, 255, 255, 0.55);
+    }
+
+    .nav-item--active {
+      background: var(--primary);
+    }
+
+    .nav-item--active svg { fill: #fff; }
+
+    .nav-item--add {
+      width: 52px;
+      height: 52px;
+      background: var(--primary);
+      margin-top: -18px;
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+    }
+
+    .nav-item--add svg { fill: #fff; width: 26px; height: 26px; }
+
+    .nav-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 20px;
+      background: var(--nav-bar);
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    Figma import (html.to.design):
+      Viewport: 390 px
+      Theme:    Light
+    Frame size: 390 × 844 px
+
+    Screen: Alerts (Notifications)
+  -->
+  <div class="screen">
+
+    <div class="status-bar" aria-hidden="true">
+      <span>10:41</span>
+      <span class="status-icons">
+        <span>●●●●</span>
+        <span>WiFi</span>
+        <span>84%</span>
+      </span>
+    </div>
+
+    <div class="header">
+      <div class="header-row">
+        <div class="back-btn" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </div>
+        <div class="header-text">
+          <h1>Alerts</h1>
+          <p>Reminders &amp; pending found check-ins</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section-title">Active reminders</div>
+
+      <div class="card">
+        <div class="card-row">
+          <svg class="card-icon card-icon--primary" viewBox="0 0 24 24">
+            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/>
+          </svg>
+          <div class="card-body">
+            <div class="card-title">Keyboard</div>
+            <div class="card-meta">Left at Teris</div>
+            <div class="card-next">Next notify: Jul 17, 2026 at 8:00 am</div>
+          </div>
+        </div>
+        <div class="card-actions">
+          <div class="btn btn--outline">Snooze 1h</div>
+          <div class="btn btn--primary">Stop</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-row">
+          <svg class="card-icon card-icon--primary" viewBox="0 0 24 24">
+            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/>
+          </svg>
+          <div class="card-body">
+            <div class="card-title">House keys</div>
+            <div class="card-meta">Left at Drawer</div>
+            <div class="card-next">Next notify: Jul 17, 2026 at 6:00 pm</div>
+          </div>
+        </div>
+        <div class="card-actions">
+          <div class="btn btn--outline">Snooze 1h</div>
+          <div class="btn btn--primary">Stop</div>
+        </div>
+      </div>
+
+      <div class="section-spacer"></div>
+      <div class="section-title">Still looking?</div>
+      <div class="section-sub">Items not marked Found for 7+ days</div>
+
+      <div class="card">
+        <div class="card-row">
+          <svg class="card-icon card-icon--error" viewBox="0 0 24 24">
+            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            <path d="M7 9h5v1H7z"/>
+          </svg>
+          <div class="card-body">
+            <div class="card-title">Wallet</div>
+            <div class="card-meta">Haven't confirmed Found yet · Bedroom</div>
+            <div class="card-meta">Saved Jul 8, 2026 at 3:12 pm</div>
+          </div>
+          <div class="open-link">Open</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav" aria-hidden="true">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      </div>
+      <div class="nav-item nav-item--add">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      </div>
+      <div class="nav-item nav-item--active">
+        <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </div>
+    </div>
+
+    <div class="nav-bar" aria-hidden="true"></div>
+
+  </div>
+
+</body>
+</html>

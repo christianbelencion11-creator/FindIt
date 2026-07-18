@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.findit.data.local.entity.ItemEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -48,6 +49,9 @@ interface ItemDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(item: ItemEntity): Long
+
+    @Update
+    suspend fun updateItem(item: ItemEntity): Int
 
     @Query(
         """

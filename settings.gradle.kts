@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FindIt"
+rootProject.name = "IRemember"
 include(":app")
  

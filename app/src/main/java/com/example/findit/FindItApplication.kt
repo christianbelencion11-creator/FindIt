@@ -16,7 +16,9 @@ class FindItApplication : Application() {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     val database by lazy { AppDatabase.getInstance(this) }
-    val repository by lazy { ItemRepository(database.itemDao()) }
+    val repository by lazy {
+        ItemRepository(database.itemDao(), database.itemHistoryDao())
+    }
 
     override fun onCreate() {
         super.onCreate()

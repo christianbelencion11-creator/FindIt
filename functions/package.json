@@ -1,6 +1,6 @@
 {
-  "name": "findit-functions",
-  "description": "Cloud Functions for FindIt password OTP",
+  "name": "iremember-functions",
+  "description": "Cloud Functions for IRemember password OTP",
   "engines": {
     "node": "20"
   },

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.findit.FindItApplication
 import com.example.findit.data.repository.ItemRepository
 import com.example.findit.model.Item
+import com.example.findit.model.ItemHistory
 import com.example.findit.reminders.ReminderScheduler
 import com.example.findit.util.FOUND_RETENTION_MS
 import com.example.findit.util.ReminderTimeUtils
@@ -38,12 +39,16 @@ class ItemViewModel(
                     deletedIds.forEach { id ->
                         ReminderScheduler.cancel(getApplication(), id)
                     }
+                    repository.purgeExpiredHistory(cutoff)
                 }
             }
         }
     }
 
     val allItems: StateFlow<List<Item>> = repository.allItems
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val historyEntries: StateFlow<List<ItemHistory>> = repository.historyEntries
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val activeReminders: StateFlow<List<Item>> = repository.activeReminders
@@ -116,6 +121,56 @@ class ItemViewModel(
         }
     }
 
+    fun updateItem(
+        itemId: Long,
+        name: String,
+        location: String,
+        category: String,
+        notes: String,
+        imageUri: String,
+        remindEnabled: Boolean = false,
+        remindHour: Int = 8,
+        remindMinute: Int = 0,
+        onUpdated: (Boolean) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val existing = repository.getItemByIdOnce(itemId)
+            if (existing == null) {
+                onUpdated(false)
+                return@launch
+            }
+            val nextAt = if (remindEnabled) {
+                ReminderTimeUtils.nextWallClockMillis(remindHour, remindMinute)
+            } else {
+                0L
+            }
+            val ok = repository.updateItem(
+                existing.copy(
+                    name = name.trim(),
+                    location = location.trim(),
+                    category = category.trim(),
+                    notes = notes.trim(),
+                    imageUri = imageUri,
+                    remindEnabled = remindEnabled,
+                    remindHour = remindHour,
+                    remindMinute = remindMinute,
+                    remindNextAt = nextAt,
+                    remindActive = remindEnabled
+                )
+            )
+            if (ok) {
+                if (remindEnabled) {
+                    repository.getItemByIdOnce(itemId)?.let { item ->
+                        ReminderScheduler.schedule(getApplication(), item)
+                    }
+                } else {
+                    ReminderScheduler.cancel(getApplication(), itemId)
+                }
+            }
+            onUpdated(ok)
+        }
+    }
+
     fun setReminder(itemId: Long, hour: Int, minute: Int, onDone: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             val updated = repository.setReminder(itemId, hour, minute)
@@ -174,6 +229,7 @@ class ItemViewModel(
             deletedIds.forEach { id ->
                 ReminderScheduler.cancel(getApplication(), id)
             }
+            repository.purgeExpiredHistory(cutoff)
         }
     }
 

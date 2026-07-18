@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -66,7 +67,8 @@ import com.example.findit.viewmodel.ItemViewModel
 fun ItemDetailScreen(
     viewModel: ItemViewModel,
     itemId: Long,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onEditClick: () -> Unit = {}
 ) {
     val item by viewModel.itemById(itemId).collectAsState(initial = null)
     var showConfirmDialog by remember { mutableStateOf(false) }
@@ -140,6 +142,16 @@ fun ItemDetailScreen(
                                 .alpha(secondaryAlpha)
                         )
                     }
+                }
+                if (item != null) {
+                    HeaderIconButton(
+                        onClick = onEditClick,
+                        icon = Icons.Default.Edit,
+                        contentDescription = "Edit item",
+                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.14f),
+                        iconTint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.alpha(secondaryAlpha)
+                    )
                 }
             }
         }
