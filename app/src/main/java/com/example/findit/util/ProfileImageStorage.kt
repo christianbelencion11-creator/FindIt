@@ -1,8 +1,10 @@
 package com.example.findit.util
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import java.io.File
+import java.io.FileOutputStream
 
 /**
  * Copies a picked gallery URI into app-internal storage so the profile photo
@@ -13,21 +15,56 @@ object ProfileImageStorage {
 
     private const val LEGACY_PROFILE_FILE_NAME = "profile_photo.jpg"
 
+    /** Strip cache-bust query (e.g. `?v=123`) from a stored path. */
+    fun stripCacheBust(path: String): String = path.substringBefore("?")
+
+    fun withCacheBust(absolutePath: String): String =
+        "${stripCacheBust(absolutePath)}?v=${System.currentTimeMillis()}"
+
     fun persist(context: Context, sourceUri: String, firebaseUid: String? = null): String {
         if (sourceUri.isBlank()) return ""
 
+        val cleanSource = stripCacheBust(sourceUri)
         val dest = File(context.filesDir, fileNameForUid(firebaseUid))
-        if (sourceUri == dest.absolutePath || sourceUri == "file://${dest.absolutePath}") {
+        if (cleanSource == dest.absolutePath || cleanSource == "file://${dest.absolutePath}") {
             return dest.absolutePath
         }
 
         return try {
-            context.contentResolver.openInputStream(Uri.parse(sourceUri))?.use { input ->
+            val uri = Uri.parse(cleanSource)
+            context.contentResolver.openInputStream(uri)?.use { input ->
                 dest.outputStream().use { output -> input.copyTo(output) }
+            } ?: run {
+                // Absolute file path fallback
+                val srcFile = File(cleanSource)
+                if (srcFile.exists()) {
+                    srcFile.inputStream().use { input ->
+                        dest.outputStream().use { output -> input.copyTo(output) }
+                    }
+                } else {
+                    return ""
+                }
             }
             dest.absolutePath
         } catch (_: Exception) {
-            sourceUri
+            ""
+        }
+    }
+
+    fun persistBitmap(
+        context: Context,
+        bitmap: Bitmap,
+        firebaseUid: String? = null,
+        quality: Int = 92
+    ): String {
+        val dest = File(context.filesDir, fileNameForUid(firebaseUid))
+        return try {
+            FileOutputStream(dest).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
+            }
+            dest.absolutePath
+        } catch (_: Exception) {
+            ""
         }
     }
 

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -43,8 +42,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,25 +53,38 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.example.findit.ui.components.PremiumScaffold
 import com.example.findit.ui.components.ProfileAvatar
+import com.example.findit.ui.components.ProfileUpdatedSuccessDialog
 import com.example.findit.ui.components.StatsSection
 import com.example.findit.ui.components.TabMenuHeader
 import com.example.findit.ui.theme.Dimensions
 import com.example.findit.ui.theme.Spacing
 import com.example.findit.ui.theme.ThemeMode
+import com.example.findit.ui.theme.darkCardGradientFill
+import com.example.findit.ui.theme.darkSurfaceBorder
+import com.example.findit.ui.theme.isAppDarkTheme
 import com.example.findit.ui.theme.mainTabBottomScrollPadding
 import com.example.findit.util.BiometricHelper
 import com.example.findit.util.computeStats
 import com.example.findit.viewmodel.ItemViewModel
 
+/** Soft accent tints for settings/permissions rows (not brand-green only). */
+private object ProfileIconAccents {
+    val Appearance = Color(0xFFFBBF24)
+    val Password = Color(0xFF60A5FA)
+    val Notifications = Color(0xFFF59E0B)
+    val Biometrics = Color(0xFF2DD4BF)
+    val Camera = Color(0xFFA78BFA)
+    val AppSettings = Color(0xFF94A3B8)
+    val About = Color(0xFF818CF8)
+}
 data class ProfileDetailsUpdate(
     val displayName: String,
     val username: String,
@@ -93,6 +103,8 @@ fun ProfileScreen(
     onThemeModeChanged: (ThemeMode) -> Unit = {},
     profileImageUri: String = "",
     onProfileImageChanged: (String) -> Unit = {},
+    showProfilePhotoUpdated: Boolean = false,
+    onProfilePhotoUpdatedDismissed: () -> Unit = {},
     displayName: String = "IRemember User",
     username: String = "iremember_user",
     bio: String = "Keeping everyday essentials organized and easy to find.",
@@ -101,27 +113,25 @@ fun ProfileScreen(
     family: String = "",
     phone: String = "",
     location: String = "",
-    onProfileDetailsChanged: (ProfileDetailsUpdate) -> Unit = {},
+    onEditProfileClick: () -> Unit = {},
     onChangePassword: () -> Unit = {},
+    onAboutClick: () -> Unit = {},
     onLogout: () -> Unit = {},
     onMenuClick: () -> Unit = {},
     onUserInteraction: () -> Unit = {},
-    bottomNavVisible: Boolean = true
+    bottomNavVisible: Boolean = true,
+    onTotalItemsClick: () -> Unit = {},
+    onCategoriesClick: () -> Unit = {},
+    onRecentClick: () -> Unit = {}
 ) {
     val allItems by viewModel.allItems.collectAsState()
     val stats = computeStats(allItems)
 
-    var isEditing by remember { mutableStateOf(false) }
-    var draftName by remember(displayName) { mutableStateOf(displayName) }
-    var draftUsername by remember(username) { mutableStateOf(username) }
-    var draftBio by remember(bio) { mutableStateOf(bio) }
-    var draftFullName by remember(fullName) { mutableStateOf(fullName) }
-    var draftBirthday by remember(birthday) { mutableStateOf(birthday) }
-    var draftFamily by remember(family) { mutableStateOf(family) }
-    var draftPhone by remember(phone) { mutableStateOf(phone) }
-    var draftLocation by remember(location) { mutableStateOf(location) }
-
     val bottomScrollPadding = mainTabBottomScrollPadding(bottomNavVisible)
+
+    if (showProfilePhotoUpdated) {
+        ProfileUpdatedSuccessDialog(onDone = onProfilePhotoUpdatedDismissed)
+    }
 
     PremiumScaffold(
         onUserInteraction = onUserInteraction,
@@ -155,63 +165,7 @@ fun ProfileScreen(
                 displayName = displayName,
                 username = username,
                 bio = bio,
-                isEditing = isEditing,
-                draftName = draftName,
-                onDraftNameChanged = { draftName = it },
-                draftUsername = draftUsername,
-                onDraftUsernameChanged = { draftUsername = it },
-                draftBio = draftBio,
-                onDraftBioChanged = { draftBio = it },
-                draftFullName = draftFullName,
-                onDraftFullNameChanged = { draftFullName = it },
-                draftBirthday = draftBirthday,
-                onDraftBirthdayChanged = { draftBirthday = it },
-                draftFamily = draftFamily,
-                onDraftFamilyChanged = { draftFamily = it },
-                draftPhone = draftPhone,
-                onDraftPhoneChanged = { draftPhone = it },
-                draftLocation = draftLocation,
-                onDraftLocationChanged = { draftLocation = it },
-                onEditClick = {
-                    draftName = displayName
-                    draftUsername = username
-                    draftBio = bio
-                    draftFullName = fullName
-                    draftBirthday = birthday
-                    draftFamily = family
-                    draftPhone = phone
-                    draftLocation = location
-                    isEditing = true
-                },
-                onCancelClick = {
-                    draftName = displayName
-                    draftUsername = username
-                    draftBio = bio
-                    draftFullName = fullName
-                    draftBirthday = birthday
-                    draftFamily = family
-                    draftPhone = phone
-                    draftLocation = location
-                    isEditing = false
-                },
-                onDoneClick = {
-                    onProfileDetailsChanged(
-                        ProfileDetailsUpdate(
-                            displayName = draftName.trim().ifBlank { "IRemember User" },
-                            username = draftUsername.trim().removePrefix("@")
-                                .ifBlank { "iremember_user" },
-                            bio = draftBio.trim().ifBlank {
-                                "Keeping everyday essentials organized and easy to find."
-                            },
-                            fullName = draftFullName.trim(),
-                            birthday = draftBirthday.trim(),
-                            family = draftFamily.trim(),
-                            phone = draftPhone.trim(),
-                            location = draftLocation.trim()
-                        )
-                    )
-                    isEditing = false
-                }
+                onEditClick = onEditProfileClick
             )
 
             PersonalDetailsCard(
@@ -222,7 +176,12 @@ fun ProfileScreen(
                 location = location
             )
 
-            StatsSection(stats = stats)
+            StatsSection(
+                stats = stats,
+                onTotalItemsClick = onTotalItemsClick,
+                onCategoriesClick = onCategoriesClick,
+                onRecentClick = onRecentClick
+            )
 
             SettingsCard(
                 themeMode = themeMode,
@@ -233,7 +192,7 @@ fun ProfileScreen(
 
             PermissionsCard()
 
-            AboutCard()
+            AboutCard(onClick = onAboutClick)
 
             Spacer(Modifier.height(Spacing.xl))
         }
@@ -247,36 +206,24 @@ private fun ProfileCard(
     displayName: String,
     username: String,
     bio: String,
-    isEditing: Boolean,
-    draftName: String,
-    onDraftNameChanged: (String) -> Unit,
-    draftUsername: String,
-    onDraftUsernameChanged: (String) -> Unit,
-    draftBio: String,
-    onDraftBioChanged: (String) -> Unit,
-    draftFullName: String,
-    onDraftFullNameChanged: (String) -> Unit,
-    draftBirthday: String,
-    onDraftBirthdayChanged: (String) -> Unit,
-    draftFamily: String,
-    onDraftFamilyChanged: (String) -> Unit,
-    draftPhone: String,
-    onDraftPhoneChanged: (String) -> Unit,
-    draftLocation: String,
-    onDraftLocationChanged: (String) -> Unit,
-    onEditClick: () -> Unit,
-    onCancelClick: () -> Unit,
-    onDoneClick: () -> Unit
+    onEditClick: () -> Unit
 ) {
+    val dark = isAppDarkTheme()
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        border = if (dark) darkSurfaceBorder() else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .darkCardGradientFill(dark)
                 .padding(Spacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -287,92 +234,36 @@ private fun ProfileCard(
                 editable = true
             )
             Spacer(Modifier.height(Spacing.md))
-
-            if (isEditing) {
-                ProfileTextField(draftName, onDraftNameChanged, "Display name")
-                Spacer(Modifier.height(Spacing.md))
-                ProfileTextField(draftUsername, onDraftUsernameChanged, "Username")
-                Spacer(Modifier.height(Spacing.md))
-                ProfileTextField(draftBio, onDraftBioChanged, "Bio", minLines = 3)
-                Spacer(Modifier.height(Spacing.md))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
-                Spacer(Modifier.height(Spacing.md))
-                Text(
-                    text = "Personal details",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = Spacing.sm)
+            Text(
+                text = displayName,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "@$username",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = Spacing.xxs)
+            )
+            Text(
+                text = bio,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = Spacing.sm)
+            )
+            Spacer(Modifier.height(Spacing.lg))
+            Button(
+                onClick = onEditClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
-                ProfileTextField(draftFullName, onDraftFullNameChanged, "Full name")
-                Spacer(Modifier.height(Spacing.md))
-                ProfileTextField(
-                    draftBirthday,
-                    onDraftBirthdayChanged,
-                    "Birthday (YYYY-MM-DD)"
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = Spacing.sm)
                 )
-                Spacer(Modifier.height(Spacing.md))
-                ProfileTextField(draftFamily, onDraftFamilyChanged, "Family / status")
-                Spacer(Modifier.height(Spacing.md))
-                ProfileTextField(
-                    draftPhone,
-                    onDraftPhoneChanged,
-                    "Phone",
-                    keyboardType = KeyboardType.Phone
-                )
-                Spacer(Modifier.height(Spacing.md))
-                ProfileTextField(draftLocation, onDraftLocationChanged, "Location")
-                Spacer(Modifier.height(Spacing.lg))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-                ) {
-                    OutlinedButton(
-                        onClick = onCancelClick,
-                        modifier = Modifier.weight(1f)
-                    ) { Text("Cancel") }
-                    Button(
-                        onClick = onDoneClick,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) { Text("Done") }
-                }
-            } else {
-                Text(
-                    text = displayName,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "@$username",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = Spacing.xxs)
-                )
-                Text(
-                    text = bio,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = Spacing.sm)
-                )
-                Spacer(Modifier.height(Spacing.lg))
-                Button(
-                    onClick = onEditClick,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = Spacing.sm)
-                    )
-                    Text("Edit Profile")
-                }
+                Text("Edit Profile")
             }
         }
     }
@@ -386,15 +277,22 @@ private fun PersonalDetailsCard(
     phone: String,
     location: String
 ) {
+    val dark = isAppDarkTheme()
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        border = if (dark) darkSurfaceBorder() else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .darkCardGradientFill(dark)
                 .padding(Spacing.xl)
         ) {
             Text(
@@ -438,32 +336,6 @@ private fun DetailRow(label: String, value: String, showDivider: Boolean = true)
 }
 
 @Composable
-private fun ProfileTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    minLines: Int = 1,
-    keyboardType: KeyboardType = KeyboardType.Text
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = minLines == 1,
-        minLines = minLines,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        shape = MaterialTheme.shapes.small,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surface,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-        )
-    )
-}
-
-@Composable
 private fun SettingsCard(
     themeMode: ThemeMode,
     onThemeModeChanged: (ThemeMode) -> Unit,
@@ -471,15 +343,22 @@ private fun SettingsCard(
     onLogout: () -> Unit
 ) {
     var themeMenuExpanded by remember { mutableStateOf(false) }
+    val dark = isAppDarkTheme()
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        border = if (dark) darkSurfaceBorder() else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .darkCardGradientFill(dark)
                 .padding(Spacing.xl)
         ) {
             Text(
@@ -497,7 +376,7 @@ private fun SettingsCard(
                 Icon(
                     imageVector = themeModeIcon(themeMode),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = ProfileIconAccents.Appearance,
                     modifier = Modifier.padding(end = Spacing.md)
                 )
                 Column(modifier = Modifier.weight(1f)) {
@@ -555,7 +434,7 @@ private fun SettingsCard(
                 Icon(
                     imageVector = Icons.Default.Lock,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = ProfileIconAccents.Password,
                     modifier = Modifier.padding(end = Spacing.md)
                 )
                 Column(modifier = Modifier.weight(1f)) {
@@ -638,15 +517,22 @@ private fun PermissionsCard() {
         context.startActivity(intent)
     }
 
+    val dark = isAppDarkTheme()
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        border = if (dark) darkSurfaceBorder() else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .darkCardGradientFill(dark)
                 .padding(Spacing.xl)
         ) {
             Text(
@@ -658,6 +544,7 @@ private fun PermissionsCard() {
 
             PermissionRow(
                 icon = Icons.Default.Notifications,
+                iconTint = ProfileIconAccents.Notifications,
                 title = "Notifications",
                 subtitle = if (notificationsGranted) {
                     "Allowed — used for Remind Me alerts"
@@ -678,6 +565,7 @@ private fun PermissionsCard() {
             )
             PermissionRow(
                 icon = Icons.Default.Fingerprint,
+                iconTint = ProfileIconAccents.Biometrics,
                 title = "Biometrics",
                 subtitle = if (biometricAvailable) {
                     "Available — used to unlock with fingerprint / face"
@@ -692,6 +580,7 @@ private fun PermissionsCard() {
             )
             PermissionRow(
                 icon = Icons.Default.CameraAlt,
+                iconTint = ProfileIconAccents.Camera,
                 title = "Camera & Photos",
                 subtitle = "Used when adding item photos or your profile picture",
                 onClick = { openAppSettings() }
@@ -702,6 +591,7 @@ private fun PermissionsCard() {
             )
             PermissionRow(
                 icon = Icons.Default.Settings,
+                iconTint = ProfileIconAccents.AppSettings,
                 title = "Open app settings",
                 subtitle = "Manage all permissions in Android settings",
                 onClick = { openAppSettings() }
@@ -713,6 +603,7 @@ private fun PermissionsCard() {
 @Composable
 private fun PermissionRow(
     icon: ImageVector,
+    iconTint: Color,
     title: String,
     subtitle: String,
     onClick: () -> Unit
@@ -727,7 +618,7 @@ private fun PermissionRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = iconTint,
             modifier = Modifier.padding(end = Spacing.md)
         )
         Column(modifier = Modifier.weight(1f)) {
@@ -751,16 +642,24 @@ private fun PermissionRow(
 }
 
 @Composable
-private fun AboutCard() {
+private fun AboutCard(onClick: () -> Unit) {
+    val dark = isAppDarkTheme()
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        border = if (dark) darkSurfaceBorder() else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .darkCardGradientFill(dark)
                 .padding(Spacing.xl)
         ) {
             Text(
@@ -778,21 +677,26 @@ private fun AboutCard() {
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = ProfileIconAccents.About,
                     modifier = Modifier.padding(end = Spacing.md)
                 )
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         "IRemember",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        "Never lose track again",
+                        "Version, privacy, and local data notice",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

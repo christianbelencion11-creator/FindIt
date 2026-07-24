@@ -14,5 +14,7 @@ data class Item(
     val remindHour: Int = 8,
     val remindMinute: Int = 0,
     val remindNextAt: Long = 0,
-    val remindActive: Boolean = false
+    val remindActive: Boolean = false,
+    /** 0 = active; otherwise soft-delete timestamp for History restore / 30-day purge. */
+    val deletedAt: Long = 0
 )

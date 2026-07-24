@@ -1,6 +1,7 @@
 package com.example.findit.auth
 
 import com.example.findit.data.repository.ItemRepository
+import com.example.findit.data.repository.NoteRepository
 import com.example.findit.util.AuthPreferences
 import com.example.findit.util.PasswordUtils
 import com.google.firebase.auth.EmailAuthProvider
@@ -21,6 +22,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 class FirebaseAuthRepository(
     private val authPreferences: AuthPreferences,
     private val itemRepository: ItemRepository? = null,
+    private val noteRepository: NoteRepository? = null,
     private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
@@ -291,6 +293,7 @@ class FirebaseAuthRepository(
         firebaseAuth.signOut()
         authPreferences.clearSessionData()
         itemRepository?.setOwnerUid("")
+        noteRepository?.setOwnerUid("")
     }
 
     fun isFirebaseSignedIn(): Boolean = firebaseAuth.currentUser != null

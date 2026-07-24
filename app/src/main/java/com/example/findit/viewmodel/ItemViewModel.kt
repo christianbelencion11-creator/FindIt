@@ -39,6 +39,10 @@ class ItemViewModel(
                     deletedIds.forEach { id ->
                         ReminderScheduler.cancel(getApplication(), id)
                     }
+                    val purgedSoft = repository.purgeSoftDeletedItems(cutoff)
+                    purgedSoft.forEach { id ->
+                        ReminderScheduler.cancel(getApplication(), id)
+                    }
                     repository.purgeExpiredHistory(cutoff)
                 }
             }
@@ -222,11 +226,22 @@ class ItemViewModel(
         }
     }
 
+    fun restoreItem(itemId: Long, onDone: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            val ok = repository.restoreItem(itemId)
+            onDone(ok)
+        }
+    }
+
     fun purgeExpiredFoundItems() {
         viewModelScope.launch {
             val cutoff = System.currentTimeMillis() - FOUND_RETENTION_MS
             val deletedIds = repository.deleteExpiredFoundItems(cutoff)
             deletedIds.forEach { id ->
+                ReminderScheduler.cancel(getApplication(), id)
+            }
+            val purgedSoft = repository.purgeSoftDeletedItems(cutoff)
+            purgedSoft.forEach { id ->
                 ReminderScheduler.cancel(getApplication(), id)
             }
             repository.purgeExpiredHistory(cutoff)

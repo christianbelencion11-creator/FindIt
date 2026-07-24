@@ -36,6 +36,9 @@ import com.example.findit.ui.theme.Dimensions
 import com.example.findit.ui.theme.Spacing
 import com.example.findit.ui.theme.StatBlue
 import com.example.findit.ui.theme.StatBlueDark
+import com.example.findit.ui.theme.darkCardGradientFill
+import com.example.findit.ui.theme.darkSurfaceBorder
+import com.example.findit.ui.theme.isAppDarkTheme
 import com.example.findit.util.formatDateTime
 
 @Composable
@@ -46,19 +49,27 @@ fun ItemCard(
     onDeleteFound: (() -> Unit)? = null,
     onEdit: (() -> Unit)? = null
 ) {
+    val dark = isAppDarkTheme()
+    val shape = RoundedCornerShape(Dimensions.cardCornerRadius)
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimensions.cardCornerRadius),
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = shape,
+        border = if (dark) darkSurfaceBorder() else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .darkCardGradientFill(dark)
                 .padding(Spacing.lg),
             horizontalArrangement = Arrangement.spacedBy(Spacing.md),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             // Icon / thumbnail
             Box(
@@ -88,7 +99,10 @@ fun ItemCard(
             }
 
             // Name + location + badge
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
                 Text(
                     text = item.name,
                     style = MaterialTheme.typography.titleSmall,
@@ -96,10 +110,7 @@ fun ItemCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = Spacing.xxs, bottom = Spacing.sm)
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Place,
                         contentDescription = null,
@@ -123,10 +134,7 @@ fun ItemCard(
                         ItemStatusBadge(found = true)
                     }
                 }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = Spacing.xs)
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.CalendarToday,
                         contentDescription = null,
@@ -134,39 +142,60 @@ fun ItemCard(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                     Text(
-                        text = formatDateTime(item.dateCreated),
+                        text = " ${formatDateTime(item.dateCreated)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                 }
             }
 
-            if (item.lastFoundAt > 0 && onDeleteFound != null) {
-                IconButton(onClick = onDeleteFound) {
+            val deleteAction = onDeleteFound.takeIf { item.lastFoundAt > 0 }
+            when {
+                deleteAction != null || onEdit != null -> {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        if (deleteAction != null) {
+                            IconButton(
+                                onClick = deleteAction,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DeleteOutline,
+                                    contentDescription = "Remove found item",
+                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
+                                )
+                            }
+                        }
+                        if (onEdit != null) {
+                            IconButton(
+                                onClick = onEdit,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit item",
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                                )
+                            }
+                        }
+                    }
+                }
+                else -> {
                     Icon(
-                        imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "Remove found item",
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(top = Spacing.xs)
+                            .size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
                     )
                 }
-            }
-            if (onEdit != null) {
-                IconButton(onClick = onEdit) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit item",
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
-                    )
-                }
-            } else if (item.lastFoundAt == 0L || onDeleteFound == null) {
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
-                )
             }
         }
     }
@@ -184,10 +213,12 @@ fun ItemStatusBadge(found: Boolean) {
         text = label,
         style = MaterialTheme.typography.labelSmall,
         color = color,
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Ellipsis,
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
             .background(color.copy(alpha = 0.14f))
             .padding(horizontal = Spacing.sm, vertical = Spacing.xxs)
     )
 }
-

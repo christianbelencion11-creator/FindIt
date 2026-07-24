@@ -1,6 +1,7 @@
 package com.example.findit.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,12 +23,14 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -52,6 +56,7 @@ import com.example.findit.ui.components.FoundSuccessDialog
 import com.example.findit.ui.components.HeaderIconButton
 import com.example.findit.ui.components.PremiumScaffold
 import com.example.findit.ui.components.RemindMeCard
+import com.example.findit.ui.components.ZoomableImageViewer
 import com.example.findit.ui.components.categoryIcon
 import com.example.findit.ui.theme.Dimensions
 import com.example.findit.ui.theme.FindItBlue
@@ -62,7 +67,6 @@ import com.example.findit.ui.theme.StatBlue
 import com.example.findit.ui.theme.StatBlueDark
 import com.example.findit.util.formatDateTime
 import com.example.findit.viewmodel.ItemViewModel
-
 @Composable
 fun ItemDetailScreen(
     viewModel: ItemViewModel,
@@ -73,11 +77,20 @@ fun ItemDetailScreen(
     val item by viewModel.itemById(itemId).collectAsState(initial = null)
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
+    var showImageViewer by remember { mutableStateOf(false) }
     var draftHour by remember(item?.id, item?.remindHour) {
         mutableIntStateOf(item?.remindHour ?: 8)
     }
     var draftMinute by remember(item?.id, item?.remindMinute) {
         mutableIntStateOf(item?.remindMinute ?: 0)
+    }
+
+    if (showImageViewer && item != null && item!!.imageUri.isNotEmpty()) {
+        ZoomableImageViewer(
+            imageUri = item!!.imageUri,
+            contentDescription = item!!.name,
+            onDismiss = { showImageViewer = false }
+        )
     }
 
     if (showConfirmDialog && item != null && item!!.lastFoundAt == 0L) {
@@ -193,15 +206,39 @@ fun ItemDetailScreen(
                                 elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                             ) {
-                                AsyncImage(
-                                    model = currentItem.imageUri,
-                                    contentDescription = currentItem.name,
+                                Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .size(220.dp)
-                                        .clip(RoundedCornerShape(Dimensions.cardCornerRadius)),
-                                    contentScale = ContentScale.Crop
-                                )
+                                        .clickable { showImageViewer = true }
+                                ) {
+                                    AsyncImage(
+                                        model = currentItem.imageUri,
+                                        contentDescription = currentItem.name,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .size(220.dp)
+                                            .clip(RoundedCornerShape(Dimensions.cardCornerRadius)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                    IconButton(
+                                        onClick = { showImageViewer = true },
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .padding(Spacing.sm)
+                                            .size(40.dp)
+                                            .background(
+                                                Color.Black.copy(alpha = 0.45f),
+                                                CircleShape
+                                            )
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.ZoomIn,
+                                            contentDescription = "Enlarge image",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -215,7 +252,7 @@ fun ItemDetailScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(Spacing.xl),
-                                verticalArrangement = Arrangement.spacedBy(Spacing.lg)
+                                verticalArrangement = Arrangement.spacedBy(Spacing.xl)
                             ) {
                                 DetailRow(Icons.Default.Place, "Location", currentItem.location)
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
@@ -406,16 +443,22 @@ private fun FoundBadge(dateText: String) {
 @Composable
 private fun DetailRow(icon: ImageVector, label: String, value: String) {
     Row(
-        verticalAlignment = Alignment.Top,
+        modifier = Modifier.padding(vertical = Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(22.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Column {
+        Box(
+            modifier = Modifier.size(40.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(22.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
@@ -425,7 +468,7 @@ private fun DetailRow(icon: ImageVector, label: String, value: String) {
                 text = value,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(top = Spacing.xxs)
+                modifier = Modifier.padding(top = Spacing.xs)
             )
         }
     }

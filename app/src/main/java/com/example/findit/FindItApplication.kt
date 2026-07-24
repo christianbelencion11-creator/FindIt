@@ -3,6 +3,8 @@ package com.example.findit
 import android.app.Application
 import com.example.findit.data.local.database.AppDatabase
 import com.example.findit.data.repository.ItemRepository
+import com.example.findit.data.repository.NoteRepository
+import com.example.findit.reminders.NoteReminderScheduler
 import com.example.findit.reminders.ReminderNotifications
 import com.example.findit.reminders.ReminderScheduler
 import com.google.firebase.FirebaseApp
@@ -19,6 +21,9 @@ class FindItApplication : Application() {
     val repository by lazy {
         ItemRepository(database.itemDao(), database.itemHistoryDao())
     }
+    val noteRepository by lazy {
+        NoteRepository(database.noteDao())
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -31,6 +36,8 @@ class FindItApplication : Application() {
         appScope.launch {
             val active = repository.getAllActiveReminders()
             ReminderScheduler.rescheduleAll(this@FindItApplication, active)
+            val noteReminders = noteRepository.getAllWithReminders()
+            NoteReminderScheduler.rescheduleAll(this@FindItApplication, noteReminders)
         }
     }
 }

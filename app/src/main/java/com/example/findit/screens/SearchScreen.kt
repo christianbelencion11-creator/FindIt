@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -81,7 +82,10 @@ fun SearchScreen(
     onAddItemClick: () -> Unit = {},
     onMenuClick: () -> Unit = {},
     onUserInteraction: () -> Unit = {},
-    bottomNavVisible: Boolean = true
+    bottomNavVisible: Boolean = true,
+    launchVoiceSearch: Boolean = false,
+    onVoiceSearchLaunched: () -> Unit = {},
+    onNotesClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val uiPreferences = remember(context) { UiPreferences(context) }
@@ -152,6 +156,13 @@ fun SearchScreen(
             launchSpeechRecognition()
         } else {
             micPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
+    LaunchedEffect(launchVoiceSearch) {
+        if (launchVoiceSearch) {
+            onVoiceSearchLaunched()
+            onVoiceSearchClick()
         }
     }
 
@@ -306,6 +317,8 @@ fun SearchScreen(
     }
         DraggableFab(
             onClick = onAddItemClick,
+            onVoiceSearchClick = { onVoiceSearchClick() },
+            onNotesClick = onNotesClick,
             uiPreferences = uiPreferences
         )
     }

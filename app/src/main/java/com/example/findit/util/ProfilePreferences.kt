@@ -12,17 +12,30 @@ class ProfilePreferences(context: Context) {
         migrateLegacyProfileIfNeeded()
     }
 
-    fun getProfileImageUri(): String =
-        readActiveUid()?.let { getProfileImageUriForUid(it) }.orEmpty()
+    fun getProfileImageUri(): String {
+        readActiveUid()?.let { uid ->
+            val forUid = getProfileImageUriForUid(uid)
+            if (forUid.isNotBlank()) return forUid
+        }
+        return prefs.getString(KEY_FALLBACK_PROFILE_IMAGE_URI, "").orEmpty()
+    }
 
     fun setProfileImageUri(uri: String) {
-        val uid = requireActiveUid() ?: return
-        prefs.edit().putString(keyImage(uid), uri).commit()
+        val uid = readActiveUid()
+        if (uid != null) {
+            prefs.edit().putString(keyImage(uid), uri).commit()
+        } else {
+            prefs.edit().putString(KEY_FALLBACK_PROFILE_IMAGE_URI, uri).commit()
+        }
     }
 
     fun markCustomized() {
-        val uid = requireActiveUid() ?: return
-        prefs.edit().putBoolean(keyCustomized(uid), true).commit()
+        val uid = readActiveUid()
+        if (uid != null) {
+            prefs.edit().putBoolean(keyCustomized(uid), true).commit()
+        } else {
+            prefs.edit().putBoolean(KEY_FALLBACK_PROFILE_CUSTOMIZED, true).commit()
+        }
     }
 
     fun getDisplayName(): String =
@@ -241,6 +254,8 @@ class ProfilePreferences(context: Context) {
         private const val KEY_PROFILE_CUSTOMIZED = "profile_customized"
         private const val KEY_LINKED_FIREBASE_UID = "linked_firebase_uid"
         private const val KEY_LEGACY_MIGRATED = "profile_legacy_migrated"
+        private const val KEY_FALLBACK_PROFILE_IMAGE_URI = "fallback_profile_image_uri"
+        private const val KEY_FALLBACK_PROFILE_CUSTOMIZED = "fallback_profile_customized"
         const val DEFAULT_DISPLAY_NAME = "IRemember User"
         const val DEFAULT_USERNAME = "iremember_user"
         const val DEFAULT_BIO = "Keeping everyday essentials organized and easy to find."

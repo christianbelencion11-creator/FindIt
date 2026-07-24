@@ -160,17 +160,49 @@ class ItemRepository(
     suspend fun deleteItem(itemId: Long): Boolean {
         val ownerUid = _currentOwnerUid.value
         if (ownerUid.isBlank()) return false
-        val existing = getItemByIdOnce(itemId)
-        val deleted = itemDao.deleteItem(ownerUid, itemId) > 0
-        if (deleted && existing != null) {
+        val existing = getItemByIdOnce(itemId) ?: return false
+        if (existing.deletedAt > 0L) return false
+        val now = System.currentTimeMillis()
+        val softDeleted = itemDao.softDeleteItem(ownerUid, itemId, now) > 0
+        if (softDeleted) {
             insertHistory(
-                itemId = 0L,
+                itemId = itemId,
                 itemName = existing.name,
                 action = HistoryAction.DELETED,
                 detail = existing.location.ifBlank { "Item removed" }
             )
         }
-        return deleted
+        return softDeleted
+    }
+
+    suspend fun restoreItem(itemId: Long): Boolean {
+        val ownerUid = _currentOwnerUid.value
+        if (ownerUid.isBlank()) return false
+        val existing = getItemByIdOnce(itemId) ?: return false
+        if (existing.deletedAt == 0L) return false
+        val restored = itemDao.restoreItem(ownerUid, itemId) > 0
+        if (restored) {
+            insertHistory(
+                itemId = itemId,
+                itemName = existing.name,
+                action = HistoryAction.EDITED,
+                detail = "Restored from History"
+            )
+        }
+        return restored
+    }
+
+    /**
+     * Permanently removes soft-deleted items older than [beforeTimestamp].
+     * Returns purged item ids (for cancelling reminders / cleanup).
+     */
+    suspend fun purgeSoftDeletedItems(beforeTimestamp: Long): List<Long> {
+        val ownerUid = _currentOwnerUid.value
+        if (ownerUid.isBlank()) return emptyList()
+        val ids = itemDao.getSoftDeletedIdsForPurge(ownerUid, beforeTimestamp)
+        if (ids.isEmpty()) return emptyList()
+        itemDao.purgeSoftDeletedItems(ownerUid, beforeTimestamp)
+        return ids
     }
 
     /**

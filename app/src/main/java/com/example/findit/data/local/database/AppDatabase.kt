@@ -8,17 +8,20 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.findit.data.local.dao.ItemDao
 import com.example.findit.data.local.dao.ItemHistoryDao
+import com.example.findit.data.local.dao.NoteDao
 import com.example.findit.data.local.entity.ItemEntity
 import com.example.findit.data.local.entity.ItemHistoryEntity
+import com.example.findit.data.local.entity.NoteEntity
 
 @Database(
-    entities = [ItemEntity::class, ItemHistoryEntity::class],
-    version = 5,
+    entities = [ItemEntity::class, ItemHistoryEntity::class, NoteEntity::class],
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun itemDao(): ItemDao
     abstract fun itemHistoryDao(): ItemHistoryDao
+    abstract fun noteDao(): NoteDao
 
     companion object {
         @Volatile
@@ -79,6 +82,42 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE items ADD COLUMN deletedAt INTEGER NOT NULL DEFAULT 0"
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS notes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        ownerUid TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        body TEXT NOT NULL,
+                        remindAt INTEGER NOT NULL,
+                        remindEnabled INTEGER NOT NULL,
+                        dateCreated INTEGER NOT NULL,
+                        dateUpdated INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE notes ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0"
+                )
+                db.execSQL(
+                    "ALTER TABLE notes ADD COLUMN accent INTEGER NOT NULL DEFAULT 0"
+                )
+                db.execSQL(
+                    "ALTER TABLE notes ADD COLUMN isChecklist INTEGER NOT NULL DEFAULT 1"
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -90,7 +129,9 @@ abstract class AppDatabase : RoomDatabase() {
                         MIGRATION_1_2,
                         MIGRATION_2_3,
                         MIGRATION_3_4,
-                        MIGRATION_4_5
+                        MIGRATION_4_5,
+                        MIGRATION_5_6,
+                        MIGRATION_6_7
                     )
                     .build()
                 INSTANCE = instance

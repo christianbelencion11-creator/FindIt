@@ -38,11 +38,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -175,7 +180,8 @@ fun RegisterScreen(
     authRepository: FirebaseAuthRepository,
     authPreferences: AuthPreferences,
     onRegisterSuccess: (FirebaseAuthRepository.SignedInUser) -> Unit,
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onPrivacyPolicyClick: () -> Unit = {}
 ) {
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -373,7 +379,8 @@ fun RegisterScreen(
         )
         TermsCheckbox(
             checked = acceptedTerms,
-            onCheckedChange = { acceptedTerms = it; error = null }
+            onCheckedChange = { acceptedTerms = it; error = null },
+            onPrivacyPolicyClick = onPrivacyPolicyClick
         )
     }
 }
@@ -515,8 +522,24 @@ fun AuthSectionLabel(text: String) {
 @Composable
 private fun TermsCheckbox(
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    onPrivacyPolicyClick: () -> Unit
 ) {
+    val annotated = buildAnnotatedString {
+        append("I agree to the Terms of Service and ")
+        pushStringAnnotation(tag = "privacy", annotation = "privacy")
+        withStyle(
+            SpanStyle(
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
+                textDecoration = TextDecoration.Underline
+            )
+        ) {
+            append("Privacy Policy")
+        }
+        pop()
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -531,11 +554,15 @@ private fun TermsCheckbox(
             checked = checked,
             onCheckedChange = onCheckedChange
         )
-        Text(
-            text = "I agree to the Terms of Service and Privacy Policy",
-            style = MaterialTheme.typography.bodySmall,
-            color = AuthTextColor,
-            modifier = Modifier.padding(start = Spacing.xs)
+        ClickableText(
+            text = annotated,
+            style = MaterialTheme.typography.bodySmall.copy(color = AuthTextColor),
+            modifier = Modifier.padding(start = Spacing.xs),
+            onClick = { offset ->
+                annotated.getStringAnnotations(tag = "privacy", start = offset, end = offset)
+                    .firstOrNull()
+                    ?.let { onPrivacyPolicyClick() }
+            }
         )
     }
 }

@@ -32,14 +32,31 @@ class ProfileStore(context: Context) {
         _state.value = readFromDisk()
     }
 
-    fun updateImage(sourceUri: String) {
+    /**
+     * Persists [sourceUri] (content URI, file path, or already-cropped file) and
+     * updates prefs with a cache-busted path so Coil refreshes the avatar.
+     * @return true if a non-blank path was saved
+     */
+    fun updateImage(sourceUri: String): Boolean {
         val uid = preferences.getLinkedFirebaseUid().takeIf { it.isNotBlank() }
         val persisted = ProfileImageStorage.persist(appContext, sourceUri, uid)
-        preferences.setProfileImageUri(persisted)
-        if (persisted.isNotBlank()) {
-            preferences.markCustomized()
-        }
+        if (persisted.isBlank()) return false
+        val busted = ProfileImageStorage.withCacheBust(persisted)
+        preferences.setProfileImageUri(busted)
+        preferences.markCustomized()
         reload()
+        return true
+    }
+
+    fun updateImageFromBitmap(bitmap: android.graphics.Bitmap): Boolean {
+        val uid = preferences.getLinkedFirebaseUid().takeIf { it.isNotBlank() }
+        val persisted = ProfileImageStorage.persistBitmap(appContext, bitmap, uid)
+        if (persisted.isBlank()) return false
+        val busted = ProfileImageStorage.withCacheBust(persisted)
+        preferences.setProfileImageUri(busted)
+        preferences.markCustomized()
+        reload()
+        return true
     }
 
     fun updateDetails(displayName: String, username: String, bio: String) {
@@ -80,11 +97,13 @@ class ProfileStore(context: Context) {
     private fun readFromDisk(): ProfileData {
         val uid = preferences.getLinkedFirebaseUid().takeIf { it.isNotBlank() }
         var imageUri = preferences.getProfileImageUri()
-        if (imageUri.startsWith("content://")) {
-            val persisted = ProfileImageStorage.persist(appContext, imageUri, uid)
-            if (persisted.isNotBlank() && persisted != imageUri) {
-                preferences.setProfileImageUri(persisted)
-                imageUri = persisted
+        val clean = ProfileImageStorage.stripCacheBust(imageUri)
+        if (clean.startsWith("content://")) {
+            val persisted = ProfileImageStorage.persist(appContext, clean, uid)
+            if (persisted.isNotBlank()) {
+                val busted = ProfileImageStorage.withCacheBust(persisted)
+                preferences.setProfileImageUri(busted)
+                imageUri = busted
             }
         }
         return ProfileData(

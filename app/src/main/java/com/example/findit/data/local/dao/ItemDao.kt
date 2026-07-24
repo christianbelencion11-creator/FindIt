@@ -10,10 +10,21 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ItemDao {
-    @Query("SELECT * FROM items WHERE ownerUid = :ownerUid ORDER BY dateCreated DESC")
+    @Query(
+        """
+        SELECT * FROM items
+        WHERE ownerUid = :ownerUid AND deletedAt = 0
+        ORDER BY dateCreated DESC
+        """
+    )
     fun getAllItems(ownerUid: String): Flow<List<ItemEntity>>
 
-    @Query("SELECT * FROM items WHERE ownerUid = :ownerUid AND id = :id")
+    @Query(
+        """
+        SELECT * FROM items
+        WHERE ownerUid = :ownerUid AND id = :id AND deletedAt = 0
+        """
+    )
     fun getItemById(ownerUid: String, id: Long): Flow<ItemEntity?>
 
     @Query("SELECT * FROM items WHERE id = :id LIMIT 1")
@@ -23,6 +34,7 @@ interface ItemDao {
         """
         SELECT * FROM items
         WHERE ownerUid = :ownerUid
+          AND deletedAt = 0
           AND (name LIKE '%' || :query || '%'
            OR location LIKE '%' || :query || '%'
            OR category LIKE '%' || :query || '%'
@@ -35,16 +47,16 @@ interface ItemDao {
     @Query(
         """
         SELECT * FROM items
-        WHERE ownerUid = :ownerUid AND remindActive = 1
+        WHERE ownerUid = :ownerUid AND remindActive = 1 AND deletedAt = 0
         ORDER BY remindNextAt ASC
         """
     )
     fun getActiveReminders(ownerUid: String): Flow<List<ItemEntity>>
 
-    @Query("SELECT * FROM items WHERE remindActive = 1")
+    @Query("SELECT * FROM items WHERE remindActive = 1 AND deletedAt = 0")
     suspend fun getAllActiveReminders(): List<ItemEntity>
 
-    @Query("SELECT COUNT(*) FROM items WHERE ownerUid = :ownerUid")
+    @Query("SELECT COUNT(*) FROM items WHERE ownerUid = :ownerUid AND deletedAt = 0")
     suspend fun getItemCount(ownerUid: String): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -56,7 +68,7 @@ interface ItemDao {
     @Query(
         """
         UPDATE items SET lastFoundAt = :timestamp
-        WHERE ownerUid = :ownerUid AND id = :id AND lastFoundAt = 0
+        WHERE ownerUid = :ownerUid AND id = :id AND lastFoundAt = 0 AND deletedAt = 0
         """
     )
     suspend fun markItemFound(ownerUid: String, id: Long, timestamp: Long): Int
@@ -69,7 +81,7 @@ interface ItemDao {
           remindMinute = :minute,
           remindNextAt = :nextAt,
           remindActive = :active
-        WHERE ownerUid = :ownerUid AND id = :id
+        WHERE ownerUid = :ownerUid AND id = :id AND deletedAt = 0
         """
     )
     suspend fun updateReminder(
@@ -98,6 +110,22 @@ interface ItemDao {
     )
     suspend fun stopReminder(id: Long): Int
 
+    @Query(
+        """
+        UPDATE items SET deletedAt = :deletedAt, remindActive = 0, remindEnabled = 0, remindNextAt = 0
+        WHERE ownerUid = :ownerUid AND id = :id AND deletedAt = 0
+        """
+    )
+    suspend fun softDeleteItem(ownerUid: String, id: Long, deletedAt: Long): Int
+
+    @Query(
+        """
+        UPDATE items SET deletedAt = 0
+        WHERE ownerUid = :ownerUid AND id = :id AND deletedAt > 0
+        """
+    )
+    suspend fun restoreItem(ownerUid: String, id: Long): Int
+
     @Query("DELETE FROM items WHERE ownerUid = :ownerUid AND id = :id")
     suspend fun deleteItem(ownerUid: String, id: Long): Int
 
@@ -105,6 +133,27 @@ interface ItemDao {
         """
         DELETE FROM items
         WHERE ownerUid = :ownerUid
+          AND deletedAt > 0
+          AND deletedAt <= :beforeTimestamp
+        """
+    )
+    suspend fun purgeSoftDeletedItems(ownerUid: String, beforeTimestamp: Long): Int
+
+    @Query(
+        """
+        SELECT id FROM items
+        WHERE ownerUid = :ownerUid
+          AND deletedAt > 0
+          AND deletedAt <= :beforeTimestamp
+        """
+    )
+    suspend fun getSoftDeletedIdsForPurge(ownerUid: String, beforeTimestamp: Long): List<Long>
+
+    @Query(
+        """
+        DELETE FROM items
+        WHERE ownerUid = :ownerUid
+          AND deletedAt = 0
           AND lastFoundAt > 0
           AND lastFoundAt <= :beforeTimestamp
         """
@@ -115,6 +164,7 @@ interface ItemDao {
         """
         SELECT id FROM items
         WHERE ownerUid = :ownerUid
+          AND deletedAt = 0
           AND lastFoundAt > 0
           AND lastFoundAt <= :beforeTimestamp
         """

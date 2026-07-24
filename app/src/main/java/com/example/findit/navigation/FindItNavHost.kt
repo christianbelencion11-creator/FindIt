@@ -6,7 +6,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -20,11 +25,19 @@ import com.example.findit.auth.FirebaseAuthRepository
 import com.example.findit.auth.SecretRecoveryRepository
 import com.example.findit.auth.UsernameAuth
 import com.example.findit.screens.ItemDetailScreen
+import com.example.findit.screens.AboutScreen
 import com.example.findit.screens.AddItemScreen
 import com.example.findit.screens.HistoryScreen
 import com.example.findit.screens.MainScreen
 import com.example.findit.screens.NewsScreen
+import com.example.findit.screens.NoteEditorScreen
+import com.example.findit.screens.NotesScreen
+import com.example.findit.screens.PrivacyPolicyScreen
+import com.example.findit.screens.ProfilePhotoCropScreen
+import com.example.findit.screens.EditProfileScreen
 import com.example.findit.screens.SplashScreen
+import com.example.findit.screens.StatsBrowseMode
+import com.example.findit.screens.StatsBrowseScreen
 import com.example.findit.screens.auth.ChangePasswordScreen
 import com.example.findit.screens.auth.ForgotPasswordScreen
 import com.example.findit.screens.auth.OnboardingScreen
@@ -64,7 +77,11 @@ fun FindItNavHost(
     val application = context.applicationContext as FindItApplication
     val authPreferences = remember { AuthPreferences(context) }
     val authRepository = remember {
-        FirebaseAuthRepository(authPreferences, application.repository)
+        FirebaseAuthRepository(
+            authPreferences,
+            application.repository,
+            application.noteRepository
+        )
     }
     val recoveryRepository = remember { SecretRecoveryRepository() }
     val viewModel: ItemViewModel = viewModel(
@@ -87,12 +104,14 @@ fun FindItNavHost(
         val uid = authRepository.currentUser?.uid ?: authPreferences.getFirebaseUid()
         if (uid.isNotBlank()) {
             application.repository.setOwnerUid(uid)
+            application.noteRepository.setOwnerUid(uid)
         }
     }
 
     fun navigateToMainAfterAuth(user: FirebaseAuthRepository.SignedInUser) {
         authPreferences.setHasSeenGetStarted(true)
         application.repository.setOwnerUid(user.uid)
+        application.noteRepository.setOwnerUid(user.uid)
         syncProfileForUser(user)
         if (authPreferences.isPinSet(user.uid)) {
             navController.navigate(Routes.UNLOCK) {
@@ -200,6 +219,9 @@ fun FindItNavHost(
                         popUpTo(Routes.REGISTER) { inclusive = true }
                         launchSingleTop = true
                     }
+                },
+                onPrivacyPolicyClick = {
+                    navController.navigate(Routes.PRIVACY_POLICY)
                 }
             )
         }
@@ -233,6 +255,18 @@ fun FindItNavHost(
         }
 
         composable(Routes.MAIN) {
+            val mainEntry = navController.getBackStackEntry(Routes.MAIN)
+            var showProfilePhotoUpdated by remember { mutableStateOf(false) }
+            val photoUpdatedFlag = mainEntry.savedStateHandle
+                .getStateFlow("profile_photo_updated", false)
+            val photoUpdated by photoUpdatedFlag.collectAsState(initial = false)
+            LaunchedEffect(photoUpdated) {
+                if (photoUpdated) {
+                    showProfilePhotoUpdated = true
+                    mainEntry.savedStateHandle["profile_photo_updated"] = false
+                }
+            }
+
             MainScreen(
                 viewModel = viewModel,
                 onItemClick = { itemId ->
@@ -244,7 +278,11 @@ fun FindItNavHost(
                 themeMode = themeMode,
                 onThemeModeChanged = onThemeModeChanged,
                 profileImageUri = profileImageUri,
-                onProfileImageChanged = onProfileImageChanged,
+                onProfileImageChanged = { uri ->
+                    navController.navigate(Routes.profileCrop(uri))
+                },
+                showProfilePhotoUpdated = showProfilePhotoUpdated,
+                onProfilePhotoUpdatedDismissed = { showProfilePhotoUpdated = false },
                 displayName = displayName,
                 username = username,
                 bio = bio,
@@ -253,7 +291,9 @@ fun FindItNavHost(
                 family = family,
                 phone = phone,
                 location = location,
-                onProfileDetailsChanged = onProfileDetailsChanged,
+                onEditProfile = {
+                    navController.navigate(Routes.EDIT_PROFILE)
+                },
                 onChangePassword = {
                     navController.navigate(Routes.CHANGE_PASSWORD)
                 },
@@ -263,12 +303,86 @@ fun FindItNavHost(
                 onHistoryClick = {
                     navController.navigate(Routes.HISTORY)
                 },
+                onNotesClick = {
+                    navController.navigate(Routes.NOTES)
+                },
+                onAboutClick = {
+                    navController.navigate(Routes.ABOUT)
+                },
+                onAllItemsClick = {
+                    navController.navigate(Routes.ALL_ITEMS)
+                },
+                onAllCategoriesClick = {
+                    navController.navigate(Routes.ALL_CATEGORIES)
+                },
+                onRecentItemsClick = {
+                    navController.navigate(Routes.RECENT_ITEMS)
+                },
+                openSearchSignal = mainEntry.savedStateHandle
+                    .getStateFlow("open_search", false),
+                onOpenSearchConsumed = {
+                    mainEntry.savedStateHandle["open_search"] = false
+                },
                 onLogout = {
                     authRepository.signOut()
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.MAIN) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(Routes.ALL_ITEMS) {
+            StatsBrowseScreen(
+                mode = StatsBrowseMode.AllItems,
+                viewModel = viewModel,
+                onBackClick = { navController.popBackStack() },
+                onItemClick = { itemId -> navController.navigate(Routes.itemDetail(itemId)) }
+            )
+        }
+
+        composable(Routes.ALL_CATEGORIES) {
+            StatsBrowseScreen(
+                mode = StatsBrowseMode.Categories,
+                viewModel = viewModel,
+                onBackClick = { navController.popBackStack() },
+                onItemClick = { itemId -> navController.navigate(Routes.itemDetail(itemId)) },
+                onCategoryOpenSearch = { cat ->
+                    viewModel.updateSearchQuery(cat)
+                    runCatching {
+                        navController.getBackStackEntry(Routes.MAIN)
+                            .savedStateHandle["open_search"] = true
+                    }
+                    navController.popBackStack(Routes.MAIN, inclusive = false)
+                }
+            )
+        }
+
+        composable(Routes.RECENT_ITEMS) {
+            StatsBrowseScreen(
+                mode = StatsBrowseMode.Recent,
+                viewModel = viewModel,
+                onBackClick = { navController.popBackStack() },
+                onItemClick = { itemId -> navController.navigate(Routes.itemDetail(itemId)) }
+            )
+        }
+
+        composable(Routes.EDIT_PROFILE) {
+            EditProfileScreen(
+                profileImageUri = profileImageUri,
+                onProfileImageChanged = { uri ->
+                    navController.navigate(Routes.profileCrop(uri))
+                },
+                displayName = displayName,
+                username = username,
+                bio = bio,
+                fullName = fullName,
+                birthday = birthday,
+                family = family,
+                phone = phone,
+                location = location,
+                onSave = onProfileDetailsChanged,
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -293,6 +407,78 @@ fun FindItNavHost(
                 onBackClick = { navController.popBackStack() },
                 onItemClick = { itemId ->
                     navController.navigate(Routes.itemDetail(itemId))
+                }
+            )
+        }
+
+        composable(Routes.NOTES) {
+            NotesScreen(
+                onBackClick = { navController.popBackStack() },
+                onOpenNote = { noteId ->
+                    navController.navigate(Routes.noteEditor(noteId))
+                },
+                onCreateNote = {
+                    navController.navigate(Routes.noteEditor(0L))
+                }
+            )
+        }
+
+        composable(
+            route = Routes.NOTE_EDITOR,
+            arguments = listOf(
+                navArgument("noteId") {
+                    type = NavType.LongType
+                    defaultValue = 0L
+                }
+            )
+        ) { backStackEntry ->
+            val noteId = backStackEntry.arguments?.getLong("noteId") ?: 0L
+            NoteEditorScreen(
+                noteId = noteId,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.ABOUT) {
+            AboutScreen(
+                onBackClick = { navController.popBackStack() },
+                onPrivacyPolicyClick = {
+                    navController.navigate(Routes.PRIVACY_POLICY)
+                }
+            )
+        }
+
+        composable(Routes.PRIVACY_POLICY) {
+            PrivacyPolicyScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.PROFILE_CROP,
+            arguments = listOf(
+                navArgument("uri") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val rawUri = backStackEntry.arguments?.getString("uri").orEmpty()
+            val sourceUri = try {
+                URLDecoder.decode(rawUri, StandardCharsets.UTF_8.name())
+            } catch (_: Exception) {
+                rawUri
+            }
+            ProfilePhotoCropScreen(
+                sourceUri = sourceUri,
+                profileStore = profileStore,
+                onCancel = { navController.popBackStack() },
+                onCropped = {
+                    runCatching {
+                        navController.getBackStackEntry(Routes.MAIN)
+                            .savedStateHandle["profile_photo_updated"] = true
+                    }
+                    navController.popBackStack()
                 }
             )
         }

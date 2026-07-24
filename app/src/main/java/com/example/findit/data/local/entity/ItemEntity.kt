@@ -20,7 +20,8 @@ data class ItemEntity(
     val remindHour: Int = 8,
     val remindMinute: Int = 0,
     val remindNextAt: Long = 0L,
-    val remindActive: Boolean = false
+    val remindActive: Boolean = false,
+    val deletedAt: Long = 0L
 )
 
 fun ItemEntity.toItem(): Item = Item(
@@ -37,7 +38,8 @@ fun ItemEntity.toItem(): Item = Item(
     remindHour = remindHour,
     remindMinute = remindMinute,
     remindNextAt = remindNextAt,
-    remindActive = remindActive
+    remindActive = remindActive,
+    deletedAt = deletedAt
 )
 
 fun Item.toEntity(): ItemEntity = ItemEntity(
@@ -54,5 +56,6 @@ fun Item.toEntity(): ItemEntity = ItemEntity(
     remindHour = remindHour,
     remindMinute = remindMinute,
     remindNextAt = remindNextAt,
-    remindActive = remindActive
+    remindActive = remindActive,
+    deletedAt = deletedAt
 )

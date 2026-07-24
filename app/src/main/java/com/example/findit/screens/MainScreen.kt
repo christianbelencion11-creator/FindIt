@@ -22,6 +22,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +39,8 @@ import com.example.findit.ui.components.FindItBottomBar
 import com.example.findit.ui.components.FindItNavigationDrawerContent
 import com.example.findit.viewmodel.ItemViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 private const val NAV_IDLE_HIDE_MS = 4_000L
@@ -51,6 +54,8 @@ fun MainScreen(
     onThemeModeChanged: (com.example.findit.ui.theme.ThemeMode) -> Unit = {},
     profileImageUri: String = "",
     onProfileImageChanged: (String) -> Unit = {},
+    showProfilePhotoUpdated: Boolean = false,
+    onProfilePhotoUpdatedDismissed: () -> Unit = {},
     displayName: String = "IRemember User",
     username: String = "iremember_user",
     bio: String = "Keeping everyday essentials organized and easy to find.",
@@ -59,17 +64,39 @@ fun MainScreen(
     family: String = "",
     phone: String = "",
     location: String = "",
-    onProfileDetailsChanged: (ProfileDetailsUpdate) -> Unit = {},
+    onEditProfile: () -> Unit = {},
     onChangePassword: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     onHistoryClick: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onNotesClick: () -> Unit = {},
+    onAboutClick: () -> Unit = {},
+    onLogout: () -> Unit = {},
+    onAllItemsClick: () -> Unit = {},
+    onAllCategoriesClick: () -> Unit = {},
+    onRecentItemsClick: () -> Unit = {},
+    openSearchSignal: StateFlow<Boolean> = MutableStateFlow(false),
+    onOpenSearchConsumed: () -> Unit = {}
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(BottomNavTab.Home) }
     var bottomNavVisible by rememberSaveable { mutableStateOf(true) }
     var lastInteraction by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var launchVoiceSearch by remember { mutableStateOf(false) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val openSearch by openSearchSignal.collectAsState()
+
+    LaunchedEffect(openSearch) {
+        if (openSearch) {
+            selectedTab = BottomNavTab.Search
+            onOpenSearchConsumed()
+        }
+    }
+
+    LaunchedEffect(showProfilePhotoUpdated) {
+        if (showProfilePhotoUpdated) {
+            selectedTab = BottomNavTab.Profile
+        }
+    }
 
     fun onUserInteraction() {
         lastInteraction = System.currentTimeMillis()
@@ -110,6 +137,8 @@ fun MainScreen(
                     displayName = displayName,
                     username = username,
                     profileImageUri = profileImageUri,
+                    themeMode = themeMode,
+                    onThemeModeChanged = onThemeModeChanged,
                     onHome = {
                         onUserInteraction()
                         closeDrawerThen { selectedTab = BottomNavTab.Home }
@@ -133,6 +162,10 @@ fun MainScreen(
                     onHistory = {
                         onUserInteraction()
                         closeDrawerThen { onHistoryClick() }
+                    },
+                    onNotes = {
+                        onUserInteraction()
+                        closeDrawerThen { onNotesClick() }
                     },
                     onProfile = {
                         onUserInteraction()
@@ -210,7 +243,28 @@ fun MainScreen(
                             selectedTab = BottomNavTab.Search
                         },
                         onUserInteraction = ::onUserInteraction,
-                        bottomNavVisible = bottomNavVisible
+                        bottomNavVisible = bottomNavVisible,
+                        onTotalItemsClick = {
+                            onUserInteraction()
+                            onAllItemsClick()
+                        },
+                        onCategoriesClick = {
+                            onUserInteraction()
+                            onAllCategoriesClick()
+                        },
+                        onRecentClick = {
+                            onUserInteraction()
+                            onRecentItemsClick()
+                        },
+                        onVoiceSearchClick = {
+                            onUserInteraction()
+                            launchVoiceSearch = true
+                            selectedTab = BottomNavTab.Search
+                        },
+                        onNotesClick = {
+                            onUserInteraction()
+                            onNotesClick()
+                        }
                     )
                     BottomNavTab.Search -> SearchScreen(
                         viewModel = viewModel,
@@ -225,7 +279,13 @@ fun MainScreen(
                             scope.launch { drawerState.open() }
                         },
                         onUserInteraction = ::onUserInteraction,
-                        bottomNavVisible = bottomNavVisible
+                        bottomNavVisible = bottomNavVisible,
+                        launchVoiceSearch = launchVoiceSearch,
+                        onVoiceSearchLaunched = { launchVoiceSearch = false },
+                        onNotesClick = {
+                            onUserInteraction()
+                            onNotesClick()
+                        }
                     )
                     BottomNavTab.AddItem -> AddItemScreen(
                         viewModel = viewModel,
@@ -257,6 +317,8 @@ fun MainScreen(
                         onThemeModeChanged = onThemeModeChanged,
                         profileImageUri = profileImageUri,
                         onProfileImageChanged = onProfileImageChanged,
+                        showProfilePhotoUpdated = showProfilePhotoUpdated,
+                        onProfilePhotoUpdatedDismissed = onProfilePhotoUpdatedDismissed,
                         displayName = displayName,
                         username = username,
                         bio = bio,
@@ -265,10 +327,17 @@ fun MainScreen(
                         family = family,
                         phone = phone,
                         location = location,
-                        onProfileDetailsChanged = onProfileDetailsChanged,
+                        onEditProfileClick = {
+                            onUserInteraction()
+                            onEditProfile()
+                        },
                         onChangePassword = {
                             onUserInteraction()
                             onChangePassword()
+                        },
+                        onAboutClick = {
+                            onUserInteraction()
+                            onAboutClick()
                         },
                         onLogout = onLogout,
                         onMenuClick = {
@@ -276,7 +345,19 @@ fun MainScreen(
                             scope.launch { drawerState.open() }
                         },
                         onUserInteraction = ::onUserInteraction,
-                        bottomNavVisible = bottomNavVisible
+                        bottomNavVisible = bottomNavVisible,
+                        onTotalItemsClick = {
+                            onUserInteraction()
+                            onAllItemsClick()
+                        },
+                        onCategoriesClick = {
+                            onUserInteraction()
+                            onAllCategoriesClick()
+                        },
+                        onRecentClick = {
+                            onUserInteraction()
+                            onRecentItemsClick()
+                        }
                     )
                 }
             }

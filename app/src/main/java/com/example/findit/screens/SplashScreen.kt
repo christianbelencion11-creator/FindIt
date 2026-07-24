@@ -6,9 +6,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,8 +28,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.findit.R
 import com.example.findit.auth.FirebaseAuthRepository
-import com.example.findit.ui.components.AuthMutedColor
-import com.example.findit.ui.theme.Spacing
 import com.example.findit.util.AuthPreferences
 import kotlinx.coroutines.delay
 
@@ -95,21 +93,23 @@ fun SplashScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            painter = painterResource(R.drawable.iremember_logo),
+            painter = painterResource(R.drawable.iremember_splash_logo),
             contentDescription = "IRemember logo",
             modifier = Modifier
-                .width(220.dp)
-                .height(176.dp)
+                .width(260.dp)
+                .height(210.dp)
                 .scale(logoScale)
                 .alpha(logoAlpha),
             contentScale = ContentScale.Fit
         )
-        Spacer(Modifier.height(Spacing.lg))
+        // Logo asset already includes "IRemember" — pull tagline up under the wordmark.
         Text(
             text = "Never lose track again",
             style = MaterialTheme.typography.bodyLarge,
-            color = AuthMutedColor,
-            modifier = Modifier.alpha(textAlpha)
+            color = Color(0xFF66756A),
+            modifier = Modifier
+                .offset(y = (-12).dp)
+                .alpha(textAlpha)
         )
     }
 }

@@ -18,19 +18,20 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.findit.navigation.BottomNavTab
 import com.example.findit.ui.theme.Spacing
+import com.example.findit.ui.theme.isAppDarkTheme
+import com.example.findit.ui.theme.premiumSurface
 
 private data class BottomNavItem(
     val tab: BottomNavTab,
@@ -52,15 +53,14 @@ fun FindItBottomBar(
     onTabSelected: (BottomNavTab) -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
-    // Follow app ThemeMode via MaterialTheme — not system dark alone.
-    val isDark = scheme.background.luminance() < 0.5f
-    val barColor = scheme.surface
+    val isDark = isAppDarkTheme()
     val selectedContainerColor = scheme.primaryContainer
     val inactiveCircleColor =
         if (isDark) Color.White.copy(alpha = 0.16f) else scheme.surfaceVariant
     val inactiveIconColor = scheme.onSurfaceVariant
     val selectedLabelColor =
         if (isDark) scheme.onSurface else scheme.primary
+    val pillShape = RoundedCornerShape(32.dp)
 
     Box(
         modifier = Modifier
@@ -69,12 +69,15 @@ fun FindItBottomBar(
             .padding(horizontal = Spacing.xl, vertical = Spacing.sm),
         contentAlignment = Alignment.Center
     ) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(32.dp),
-            color = barColor,
-            tonalElevation = if (isDark) 3.dp else 2.dp,
-            shadowElevation = if (isDark) 12.dp else 10.dp
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(
+                    elevation = if (isDark) 12.dp else 10.dp,
+                    shape = pillShape,
+                    clip = false
+                )
+                .premiumSurface(pillShape, isDark, scheme.surface)
         ) {
             Row(
                 modifier = Modifier

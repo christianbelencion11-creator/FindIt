@@ -1,8 +1,8 @@
 package com.example.findit.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,11 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Inventory
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
@@ -36,27 +34,33 @@ import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.findit.R
@@ -65,22 +69,32 @@ import com.example.findit.ui.components.CategoryChip
 import com.example.findit.ui.components.DraggableFab
 import com.example.findit.ui.components.EmptyState
 import com.example.findit.ui.components.FindItSearchBar
+import com.example.findit.ui.components.HomeWeatherSheetContent
 import com.example.findit.ui.components.ItemCard
 import com.example.findit.ui.components.PremiumScaffold
 import com.example.findit.ui.components.ProfileAvatar
 import com.example.findit.ui.components.StatsSection
+import com.example.findit.ui.components.ThemeModeHeaderControl
 import com.example.findit.ui.components.WeatherWidget
 import com.example.findit.ui.theme.Dimensions
 import com.example.findit.ui.theme.Spacing
 import com.example.findit.ui.theme.StatGreen
 import com.example.findit.ui.theme.ThemeMode
+import com.example.findit.ui.theme.darkCardGradientFill
+import com.example.findit.ui.theme.darkSurfaceBorder
+import com.example.findit.ui.theme.isAppDarkTheme
 import com.example.findit.ui.theme.mainTabBottomScrollPadding
 import com.example.findit.util.ReminderTimeUtils
 import com.example.findit.util.UiPreferences
+import com.example.findit.util.WeatherSnapshot
 import com.example.findit.util.computeStats
+import com.example.findit.util.fetchWeather
 import com.example.findit.viewmodel.ItemViewModel
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: ItemViewModel,
@@ -100,7 +114,12 @@ fun HomeScreen(
     onAlertsClick: () -> Unit = {},
     onLocationClick: (String) -> Unit = {},
     onUserInteraction: () -> Unit = {},
-    bottomNavVisible: Boolean = true
+    bottomNavVisible: Boolean = true,
+    onTotalItemsClick: () -> Unit = {},
+    onCategoriesClick: () -> Unit = {},
+    onRecentClick: () -> Unit = {},
+    onVoiceSearchClick: () -> Unit = {},
+    onNotesClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val uiPreferences = remember(context) { UiPreferences(context) }
@@ -117,11 +136,30 @@ fun HomeScreen(
     }
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     var pendingDeleteItem by remember { mutableStateOf<Item?>(null) }
+    var showLocalDataWarning by remember {
+        mutableStateOf(!uiPreferences.isLocalDataWarningDismissed())
+    }
+    var showWeatherSheet by remember { mutableStateOf(false) }
+    var weather by remember { mutableStateOf<WeatherSnapshot?>(null) }
+    var weatherLoading by remember { mutableStateOf(true) }
+    var weatherRefreshKey by remember { mutableIntStateOf(0) }
+    val weatherSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val weatherDateHeadline = remember {
+        val now = Calendar.getInstance().time
+        val locale = Locale.getDefault()
+        SimpleDateFormat("EEEE, d MMMM", locale).format(now)
+    }
     val displayedItems = remember(allItems, selectedCategory) {
         val base = if (selectedCategory != null)
             allItems.filter { it.category.contains(selectedCategory!!, ignoreCase = true) }
         else allItems
         base.take(5)
+    }
+
+    LaunchedEffect(weatherRefreshKey) {
+        weatherLoading = true
+        weather = fetchWeather()
+        weatherLoading = false
     }
 
     val bottomScrollPadding = mainTabBottomScrollPadding(bottomNavVisible)
@@ -141,13 +179,32 @@ fun HomeScreen(
                     onQueryChange = {},
                     readOnly = true,
                     onClick = onSearchClick,
+                    onVoiceClick = onVoiceSearchClick,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
+            if (showLocalDataWarning) {
+                item {
+                    LocalDataHomeBanner(
+                        onDismiss = {
+                            uiPreferences.setLocalDataWarningDismissed(true)
+                            showLocalDataWarning = false
+                        }
+                    )
+                }
+            }
+
             item { MascotAssistantCard(stats.totalItems, stats.categories) }
 
-            item { StatsSection(stats = stats) }
+            item {
+                StatsSection(
+                    stats = stats,
+                    onTotalItemsClick = onTotalItemsClick,
+                    onCategoriesClick = onCategoriesClick,
+                    onRecentClick = onRecentClick
+                )
+            }
 
             if (activeReminders.isNotEmpty() || overdueUnfound.isNotEmpty()) {
                 item {
@@ -277,7 +334,11 @@ fun HomeScreen(
     }
 
     if (embedded) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (showWeatherSheet) Modifier.blur(18.dp) else Modifier)
+        ) {
             PremiumScaffold(
                 headerHeight = Dimensions.headerContentHome,
                 onUserInteraction = onUserInteraction,
@@ -286,23 +347,32 @@ fun HomeScreen(
                         displayName = displayName,
                         profileImageUri = profileImageUri,
                         collapseFraction = collapseFraction,
+                        weather = weather,
+                        weatherLoading = weatherLoading,
                         onMenuClick = onMenuClick,
                         themeMode = themeMode,
                         onThemeModeChanged = onThemeModeChanged,
                         onProfileClick = onProfileClick,
                         onNotificationsClick = onNotificationsClick,
-                        onAlertsClick = onAlertsClick
+                        onAlertsClick = onAlertsClick,
+                        onWeatherClick = { showWeatherSheet = true }
                     )
                 },
                 bodyContent = body
             )
             DraggableFab(
                 onClick = onAddItemClick,
+                onVoiceSearchClick = onVoiceSearchClick,
+                onNotesClick = onNotesClick,
                 uiPreferences = uiPreferences
             )
         }
     } else {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (showWeatherSheet) Modifier.blur(18.dp) else Modifier)
+        ) {
             PremiumScaffold(
                 headerHeight = Dimensions.headerContentHome,
                 onUserInteraction = onUserInteraction,
@@ -311,19 +381,53 @@ fun HomeScreen(
                         displayName = displayName,
                         profileImageUri = profileImageUri,
                         collapseFraction = collapseFraction,
+                        weather = weather,
+                        weatherLoading = weatherLoading,
                         onMenuClick = onMenuClick,
                         themeMode = themeMode,
                         onThemeModeChanged = onThemeModeChanged,
                         onProfileClick = onProfileClick,
                         onNotificationsClick = onNotificationsClick,
-                        onAlertsClick = onAlertsClick
+                        onAlertsClick = onAlertsClick,
+                        onWeatherClick = { showWeatherSheet = true }
                     )
                 },
                 bodyContent = body
             )
             DraggableFab(
                 onClick = onAddItemClick,
+                onVoiceSearchClick = onVoiceSearchClick,
+                onNotesClick = onNotesClick,
                 uiPreferences = uiPreferences
+            )
+        }
+    }
+
+    if (showWeatherSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showWeatherSheet = false },
+            sheetState = weatherSheetState,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            containerColor = Color.Transparent,
+            scrimColor = Color.Black.copy(alpha = 0.18f),
+            dragHandle = {
+                Box(
+                    modifier = Modifier
+                        .padding(top = Spacing.md, bottom = Spacing.sm)
+                        .size(width = 40.dp, height = 4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(Color.White.copy(alpha = 0.55f))
+                )
+            }
+        ) {
+            HomeWeatherSheetContent(
+                dateHeadline = weatherDateHeadline,
+                weather = weather,
+                loading = weatherLoading,
+                onRefresh = { weatherRefreshKey += 1 },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.92f)
             )
         }
     }
@@ -336,15 +440,17 @@ private fun HomeHeader(
     displayName: String,
     profileImageUri: String,
     collapseFraction: Float,
+    weather: WeatherSnapshot?,
+    weatherLoading: Boolean,
     onMenuClick: () -> Unit,
     themeMode: ThemeMode,
     onThemeModeChanged: (ThemeMode) -> Unit,
     onProfileClick: () -> Unit,
     onNotificationsClick: () -> Unit,
-    onAlertsClick: () -> Unit
+    onAlertsClick: () -> Unit,
+    onWeatherClick: () -> Unit
 ) {
     val secondaryAlpha = (1f - collapseFraction).coerceIn(0f, 1f)
-    var themeMenuExpanded by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -366,32 +472,10 @@ private fun HomeHeader(
                     contentDesc = "Menu",
                     onClick = onMenuClick
                 )
-                Box {
-                    HeaderThemeButton(
-                        themeMode = themeMode,
-                        onClick = { themeMenuExpanded = true }
-                    )
-                    DropdownMenu(
-                        expanded = themeMenuExpanded,
-                        onDismissRequest = { themeMenuExpanded = false }
-                    ) {
-                        ThemeMode.entries.forEach { mode ->
-                            DropdownMenuItem(
-                                text = { Text(mode.name) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = themeModeIcon(mode),
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = {
-                                    onThemeModeChanged(mode)
-                                    themeMenuExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
+                ThemeModeHeaderControl(
+                    themeMode = themeMode,
+                    onThemeModeChanged = onThemeModeChanged
+                )
             }
             HeaderActionsRow(
                 profileImageUri = profileImageUri,
@@ -426,38 +510,17 @@ private fun HomeHeader(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            WeatherWidget(modifier = Modifier.alpha(secondaryAlpha))
+            WeatherWidget(
+                weather = weather,
+                loading = weatherLoading,
+                onClick = onWeatherClick,
+                modifier = Modifier.alpha(secondaryAlpha)
+            )
         }
     }
 }
 
-@Composable
-private fun HeaderThemeButton(
-    themeMode: ThemeMode,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(36.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.primary)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = themeModeIcon(themeMode),
-            contentDescription = "Theme mode",
-            tint = Color.White,
-            modifier = Modifier.size(20.dp)
-        )
-    }
-}
 
-private fun themeModeIcon(mode: ThemeMode) = when (mode) {
-    ThemeMode.Light -> Icons.Default.LightMode
-    ThemeMode.Dark -> Icons.Default.DarkMode
-    ThemeMode.Auto -> Icons.Default.BrightnessAuto
-}
 
 @Composable
 private fun HeaderActionsRow(
@@ -484,11 +547,11 @@ private fun HeaderActionsRow(
             iconTint = StatGreen
         )
         Spacer(Modifier.size(Spacing.xs))
-        Box(
-            modifier = Modifier
-                .shadow(6.dp, CircleShape, clip = false)
-                .clip(CircleShape)
-                .clickable(onClick = onProfileClick)
+        Surface(
+            onClick = onProfileClick,
+            modifier = Modifier.shadow(6.dp, CircleShape, clip = false),
+            shape = CircleShape,
+            color = Color.Transparent
         ) {
             ProfileAvatar(
                 imageUri = profileImageUri,
@@ -508,20 +571,20 @@ private fun HeaderIconButton(
     modifier: Modifier = Modifier,
     iconTint: Color = MaterialTheme.colorScheme.onPrimary
 ) {
-    Box(
-        modifier = modifier
-            .size(36.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.14f))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+    Surface(
+        onClick = onClick,
+        modifier = modifier.size(36.dp),
+        shape = RoundedCornerShape(10.dp),
+        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.14f)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDesc,
-            modifier = Modifier.size(20.dp),
-            tint = iconTint
-        )
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDesc,
+                modifier = Modifier.size(20.dp),
+                tint = iconTint
+            )
+        }
     }
 }
 
@@ -535,29 +598,39 @@ private fun NeedsAttentionCard(
     topOverdueName: String?,
     onOpenAlerts: () -> Unit
 ) {
+    val dark = isAppDarkTheme()
+    val shape = RoundedCornerShape(Dimensions.cardCornerRadius)
     Card(
         onClick = onOpenAlerts,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimensions.cardCornerRadius),
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
+        shape = shape,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = if (dark) {
+            darkSurfaceBorder()
+        } else {
+            BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+            )
+        },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .darkCardGradientFill(dark)
                 .padding(Spacing.lg)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
+                AttentionIconBadge(
+                    icon = Icons.Default.Notifications,
+                    tint = Color(0xFFF59E0B),
+                    bg = Color(0xFFF59E0B).copy(alpha = 0.18f)
                 )
                 Spacer(Modifier.width(Spacing.sm))
                 Text(
@@ -582,6 +655,8 @@ private fun NeedsAttentionCard(
             if (reminderCount > 0) {
                 AttentionRow(
                     icon = Icons.Default.Alarm,
+                    iconTint = Color(0xFF38BDF8),
+                    iconBg = Color(0xFF38BDF8).copy(alpha = 0.18f),
                     title = if (reminderCount == 1) "1 active reminder" else "$reminderCount active reminders",
                     subtitle = topReminderName?.let { "Next up: $it" }
                         ?: "Open Alerts to snooze or stop"
@@ -593,6 +668,8 @@ private fun NeedsAttentionCard(
             if (overdueCount > 0) {
                 AttentionRow(
                     icon = Icons.Default.SearchOff,
+                    iconTint = Color(0xFFFB7185),
+                    iconBg = Color(0xFFFB7185).copy(alpha = 0.18f),
                     title = if (overdueCount == 1) {
                         "1 item still missing"
                     } else {
@@ -608,22 +685,41 @@ private fun NeedsAttentionCard(
 }
 
 @Composable
+private fun AttentionIconBadge(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: Color,
+    bg: Color
+) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(bg),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
 private fun AttentionRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
-    subtitle: String?
+    subtitle: String?,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
+    iconBg: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(18.dp)
-        )
+        AttentionIconBadge(icon = icon, tint = iconTint, bg = iconBg)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -653,15 +749,23 @@ private fun MascotAssistantCard(totalItems: Int, categories: Int) {
         "Add your first item and I'll remember where it belongs."
     }
 
+    val dark = isAppDarkTheme()
+    val shape = RoundedCornerShape(Dimensions.cardCornerRadius)
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimensions.cardCornerRadius),
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = shape,
+        border = if (dark) darkSurfaceBorder() else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .darkCardGradientFill(dark)
                 .padding(Spacing.md),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Spacing.md)
@@ -721,17 +825,24 @@ private fun LocationCard(
     count: Int,
     onClick: () -> Unit
 ) {
+    val dark = isAppDarkTheme()
+    val shape = RoundedCornerShape(Dimensions.cardCornerRadius)
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(Dimensions.cardCornerRadius),
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = shape,
+        border = if (dark) darkSurfaceBorder() else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .darkCardGradientFill(dark)
                 .padding(Spacing.md),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Spacing.md)
@@ -764,6 +875,36 @@ private fun LocationCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
+        }
+    }
+}
+
+@Composable
+private fun LocalDataHomeBanner(onDismiss: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f))
+            .padding(Spacing.lg)
+    ) {
+        Text(
+            text = "Items stay on this device only",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Uninstalling IRemember permanently deletes your saved items and history. They are not backed up to the cloud.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        TextButton(
+            onClick = onDismiss,
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text("Got it")
         }
     }
 }

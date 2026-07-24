@@ -1,6 +1,5 @@
 package com.example.findit.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.findit.model.Item
 import com.example.findit.ui.components.EmptyState
@@ -37,6 +37,9 @@ import com.example.findit.ui.components.PremiumScaffold
 import com.example.findit.ui.components.TabMenuHeader
 import com.example.findit.ui.theme.Dimensions
 import com.example.findit.ui.theme.Spacing
+import com.example.findit.ui.theme.darkCardGradientFill
+import com.example.findit.ui.theme.darkSurfaceBorder
+import com.example.findit.ui.theme.isAppDarkTheme
 import com.example.findit.ui.theme.mainTabBottomScrollPadding
 import com.example.findit.util.ReminderTimeUtils
 import com.example.findit.util.formatDateTime
@@ -140,15 +143,26 @@ private fun ReminderAlertCard(
     onSnooze: () -> Unit,
     onStop: () -> Unit
 ) {
+    val dark = isAppDarkTheme()
+    val shape = RoundedCornerShape(Dimensions.cardCornerRadius)
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onOpen),
-        shape = RoundedCornerShape(Dimensions.cardCornerRadius),
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        onClick = onOpen,
+        modifier = Modifier.fillMaxWidth(),
+        shape = shape,
+        border = if (dark) darkSurfaceBorder() else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+        )
     ) {
-        Column(modifier = Modifier.padding(Spacing.lg)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .darkCardGradientFill(dark)
+                .padding(Spacing.lg)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Spacing.md)
@@ -204,16 +218,25 @@ private fun OverdueAlertCard(
     item: Item,
     onOpen: () -> Unit
 ) {
+    val dark = isAppDarkTheme()
+    val shape = RoundedCornerShape(Dimensions.cardCornerRadius)
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onOpen),
-        shape = RoundedCornerShape(Dimensions.cardCornerRadius),
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        onClick = onOpen,
+        modifier = Modifier.fillMaxWidth(),
+        shape = shape,
+        border = if (dark) darkSurfaceBorder() else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
-            modifier = Modifier.padding(Spacing.lg),
+            modifier = Modifier
+                .fillMaxWidth()
+                .darkCardGradientFill(dark)
+                .padding(Spacing.lg),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Spacing.md)
         ) {

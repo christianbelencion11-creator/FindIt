@@ -1,6 +1,7 @@
 package com.example.findit.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,11 +18,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.findit.ui.theme.Spacing
+import com.example.findit.ui.theme.isAppDarkTheme
+import com.example.findit.ui.theme.premiumSurface
 
 @Composable
 fun FindItSearchBar(
@@ -36,16 +43,39 @@ fun FindItSearchBar(
     isListening: Boolean = false
 ) {
     val showTrailing = onFilterClick != null || onVoiceClick != null
+    val dark = isAppDarkTheme()
+    val shape = RoundedCornerShape(16.dp)
+    val fieldContainer = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+    val borderColor = if (dark) {
+        Color.White.copy(alpha = 0.10f)
+    } else {
+        MaterialTheme.colorScheme.outline
+    }
+    val fieldInteraction = remember { MutableInteractionSource() }
 
+    // Shell only (no outer clickable) so press indication stays inside the rounded clip.
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .premiumSurface(shape, dark, MaterialTheme.colorScheme.surface)
     ) {
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .then(
+                    if (onClick != null) {
+                        Modifier.clickable(
+                            interactionSource = fieldInteraction,
+                            indication = ripple(bounded = true),
+                            onClick = onClick
+                        )
+                    } else {
+                        Modifier
+                    }
+                ),
             placeholder = {
                 Text(
                     placeholder,
@@ -93,17 +123,22 @@ fun FindItSearchBar(
                 null
             },
             readOnly = readOnly || onClick != null,
-            enabled = onClick == null,
+            // Keep enabled so trailing IconButtons (mic/filter) remain tappable when onClick is set.
+            enabled = true,
             singleLine = true,
-            shape = RoundedCornerShape(16.dp),
+            shape = shape,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                disabledContainerColor = MaterialTheme.colorScheme.surface,
+                focusedContainerColor = fieldContainer,
+                unfocusedContainerColor = fieldContainer,
+                disabledContainerColor = fieldContainer,
                 disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledBorderColor = MaterialTheme.colorScheme.outline,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                disabledBorderColor = borderColor,
+                focusedBorderColor = if (dark) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.75f)
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
+                unfocusedBorderColor = if (dark) Color.Transparent else borderColor
             )
         )
     }

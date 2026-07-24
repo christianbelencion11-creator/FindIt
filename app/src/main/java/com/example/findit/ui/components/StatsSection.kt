@@ -36,6 +36,9 @@ import com.example.findit.ui.theme.StatGreen
 import com.example.findit.ui.theme.StatGreenDark
 import com.example.findit.ui.theme.StatPurple
 import com.example.findit.ui.theme.StatPurpleDark
+import com.example.findit.ui.theme.darkCardGradientFill
+import com.example.findit.ui.theme.darkSurfaceBorder
+import com.example.findit.ui.theme.isAppDarkTheme
 
 data class StatsData(
     val totalItems: Int,
@@ -47,7 +50,10 @@ data class StatsData(
 fun StatsSection(
     stats: StatsData,
     modifier: Modifier = Modifier,
-    visible: Boolean = true
+    visible: Boolean = true,
+    onTotalItemsClick: (() -> Unit)? = null,
+    onCategoriesClick: (() -> Unit)? = null,
+    onRecentClick: (() -> Unit)? = null
 ) {
     if (!visible) return
     Row(
@@ -59,6 +65,7 @@ fun StatsSection(
             value = stats.totalItems.toString(),
             icon = Icons.Default.Inventory,
             iconBrush = Brush.linearGradient(listOf(StatBlue, StatBlueDark)),
+            onClick = onTotalItemsClick,
             modifier = Modifier.weight(1f)
         )
         PremiumStatCard(
@@ -66,6 +73,7 @@ fun StatsSection(
             value = stats.categories.toString(),
             icon = Icons.Default.Category,
             iconBrush = Brush.linearGradient(listOf(StatPurple, StatPurpleDark)),
+            onClick = onCategoriesClick,
             modifier = Modifier.weight(1f)
         )
         PremiumStatCard(
@@ -73,6 +81,7 @@ fun StatsSection(
             value = stats.recentlyAdded.toString(),
             icon = Icons.Default.Schedule,
             iconBrush = Brush.linearGradient(listOf(StatGreen, StatGreenDark)),
+            onClick = onRecentClick,
             modifier = Modifier.weight(1f)
         )
     }
@@ -84,46 +93,78 @@ private fun PremiumStatCard(
     value: String,
     icon: ImageVector,
     iconBrush: Brush,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(Dimensions.cardCornerRadius),
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.cardElevation),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(
+    val dark = isAppDarkTheme()
+    val shape = RoundedCornerShape(Dimensions.cardCornerRadius)
+    val content: @Composable () -> Unit = {
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Spacing.md, vertical = Spacing.lg),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .darkCardGradientFill(dark)
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(iconBrush),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.md, vertical = Spacing.lg),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp)
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(iconBrush),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(Modifier.height(Spacing.sm))
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = Spacing.xxs)
                 )
             }
-            Spacer(Modifier.height(Spacing.sm))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = Spacing.xxs)
-            )
         }
+    }
+    if (onClick != null) {
+        Card(
+            onClick = onClick,
+            modifier = modifier,
+            shape = shape,
+            border = if (dark) darkSurfaceBorder() else null,
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+            ),
+            colors = CardDefaults.cardColors(
+                containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+            ),
+            content = { content() }
+        )
+    } else {
+        Card(
+            modifier = modifier,
+            shape = shape,
+            border = if (dark) darkSurfaceBorder() else null,
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+            ),
+            colors = CardDefaults.cardColors(
+                containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+            ),
+            content = { content() }
+        )
     }
 }

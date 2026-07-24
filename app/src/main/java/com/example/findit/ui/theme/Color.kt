@@ -23,14 +23,18 @@ val FindItBlueLightDark     = Color(0xFF3D7A52)  // lighter — avatar stands ou
 val FindItBackgroundDark    = Color(0xFF1B3A24)  // medium dark green background
 val FindItSurfaceDark       = Color(0xFF274D33)  // card surfaces — clearly visible on background
 val FindItSurfaceVarDark    = Color(0xFF325C3F)
+/** Dark card lift (top of subtle vertical gradient). */
+val FindItSurfaceGradTopDark = Color(0xFF356B45)
+/** Dark card anchor (bottom of subtle vertical gradient). */
+val FindItSurfaceGradBottomDark = Color(0xFF1E3F2A)
 val FindItOnSurfaceDark     = Color(0xFFEBF5EC)
 val FindItGradientStartDark = Color(0xFF0D4A2B)
 val FindItGradientEndDark   = Color(0xFF28A85A)
 
-// Premium dashboard accents
-val StatBlue       = Color(0xFF16A34A)
-val StatBlueDark   = Color(0xFF047857)
-val StatPurple     = Color(0xFF34D399)
-val StatPurpleDark = Color(0xFF0F766E)
+// Premium dashboard accents — vivid (not green-only)
+val StatBlue       = Color(0xFF3B82F6)
+val StatBlueDark   = Color(0xFF1D4ED8)
+val StatPurple     = Color(0xFFA78BFA)
+val StatPurpleDark = Color(0xFF7C3AED)
 val StatGreen      = Color(0xFFFACC15)
 val StatGreenDark  = Color(0xFFEAB308)

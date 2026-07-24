@@ -1,7 +1,6 @@
 package com.example.findit.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
@@ -32,6 +32,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.findit.ui.theme.Spacing
+import com.example.findit.ui.theme.ThemeMode
 import com.example.findit.ui.theme.gradientEndColor
 import com.example.findit.ui.theme.gradientStartColor
 
@@ -52,12 +54,15 @@ fun FindItNavigationDrawerContent(
     displayName: String,
     username: String = "",
     profileImageUri: String,
+    themeMode: ThemeMode,
+    onThemeModeChanged: (ThemeMode) -> Unit,
     onHome: () -> Unit,
     onSearch: () -> Unit,
     onAddItem: () -> Unit,
     onAlerts: () -> Unit,
     onNews: () -> Unit,
     onHistory: () -> Unit,
+    onNotes: () -> Unit,
     onProfile: () -> Unit,
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier
@@ -114,6 +119,11 @@ fun FindItNavigationDrawerContent(
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
+                Spacer(Modifier.width(Spacing.sm))
+                ThemeModeHeaderControl(
+                    themeMode = themeMode,
+                    onThemeModeChanged = onThemeModeChanged
+                )
             }
         }
 
@@ -159,6 +169,12 @@ fun FindItNavigationDrawerContent(
                 title = "History",
                 subtitle = "Found, edited, and deleted items",
                 onClick = onHistory
+            )
+            DrawerMenuRow(
+                icon = Icons.AutoMirrored.Filled.Notes,
+                title = "Notes",
+                subtitle = "Lists and reminders",
+                onClick = onNotes
             )
             DrawerMenuRow(
                 icon = Icons.Outlined.PersonOutline,
@@ -212,33 +228,37 @@ private fun DrawerMenuRow(
     showDivider: Boolean = true
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.lg)
+        Surface(
+            onClick = onClick,
+            color = Color.Transparent
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(26.dp)
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.xl, vertical = Spacing.lg),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.lg)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(26.dp)
                 )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 2.dp)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
             }
         }
         if (showDivider) {

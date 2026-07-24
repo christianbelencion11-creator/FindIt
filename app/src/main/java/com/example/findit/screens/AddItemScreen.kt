@@ -374,6 +374,15 @@ fun AddItemScreen(
                     onStop = { remindEnabled = false }
                 )
 
+                if (!isEditMode) {
+                    Text(
+                        text = "Saved on this device only. Uninstalling the app permanently deletes your items.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = Spacing.xs)
+                    )
+                }
+
                 Spacer(Modifier.height(Spacing.sm))
 
                 Button(

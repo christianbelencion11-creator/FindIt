@@ -1,9 +1,8 @@
-package com.example.findit.screens
+﻿package com.example.findit.screens
 
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -63,6 +63,9 @@ import com.example.findit.ui.components.HeaderIconButton
 import com.example.findit.ui.components.PremiumScaffold
 import com.example.findit.ui.theme.Dimensions
 import com.example.findit.ui.theme.Spacing
+import com.example.findit.ui.theme.darkCardGradientFill
+import com.example.findit.ui.theme.darkSurfaceBorder
+import com.example.findit.ui.theme.isAppDarkTheme
 import com.example.findit.util.UiPreferences
 import kotlinx.coroutines.launch
 
@@ -151,25 +154,14 @@ fun NewsScreen(
                             .alpha(secondaryAlpha)
                     )
                 }
-                TextButton(
+                HeaderIconButton(
                     onClick = { load() },
-                    modifier = Modifier.alpha(secondaryAlpha),
-                    contentPadding = PaddingValues(horizontal = Spacing.sm, vertical = 0.dp),
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Text(
-                        text = "Refresh",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                    Spacer(Modifier.width(Spacing.xs))
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+                    icon = Icons.Default.Refresh,
+                    contentDescription = "Refresh",
+                    containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.14f),
+                    iconTint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.alpha(secondaryAlpha)
+                )
             }
         }
     ) { scrollModifier ->
@@ -319,19 +311,24 @@ private fun NewsRow(
     item: NewsItem,
     onClick: () -> Unit
 ) {
+    val dark = isAppDarkTheme()
+    val shape = RoundedCornerShape(16.dp)
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = shape,
+        border = if (dark) darkSurfaceBorder() else null,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else 1.dp
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .darkCardGradientFill(dark)
                 .padding(Spacing.md),
             verticalAlignment = Alignment.Top
         ) {
