@@ -39,3 +39,6 @@ val StatPurple     = Color(0xFFA78BFA)
 val StatPurpleDark = Color(0xFF7C3AED)
 val StatGreen      = Color(0xFFFACC15)
 val StatGreenDark  = Color(0xFFEAB308)
+// "Your Overview" dashboard badges — solid accents shown at low alpha behind an outline icon.
+val StatEmerald    = Color(0xFF34D399)  // Total Items — emerald that pops on the near-black panel
+val StatAmber      = Color(0xFFFACC15)  // Recent — warm amber (same hue as legacy StatGreen)

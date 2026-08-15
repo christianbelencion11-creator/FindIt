@@ -36,11 +36,19 @@ class UiPreferences(context: Context) {
         prefs.edit().putBoolean(KEY_LOCAL_DATA_WARNING_DISMISSED, dismissed).apply()
     }
 
+    fun isLocationPermissionAsked(): Boolean =
+        prefs.getBoolean(KEY_LOCATION_PERMISSION_ASKED, false)
+
+    fun setLocationPermissionAsked(asked: Boolean) {
+        prefs.edit().putBoolean(KEY_LOCATION_PERMISSION_ASKED, asked).apply()
+    }
+
     companion object {
         private const val PREFS_NAME = "findit_ui_prefs"
         private const val KEY_FAB_OFFSET_X = "fab_offset_x"
         private const val KEY_FAB_OFFSET_Y = "fab_offset_y"
         private const val KEY_NEWS_FEED = "news_feed"
         private const val KEY_LOCAL_DATA_WARNING_DISMISSED = "local_data_warning_dismissed"
+        private const val KEY_LOCATION_PERMISSION_ASKED = "location_permission_asked"
     }
 }

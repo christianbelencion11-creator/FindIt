@@ -1,5 +1,6 @@
 package com.example.findit.util
 
+import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -40,10 +41,13 @@ data class WeatherSnapshot(
     /** Next hours for the Today strip. */
     val hours: List<WeatherHour> = emptyList(),
     /** Past days before today (most recent first). Kept for compatibility. */
-    val previousDays: List<WeatherDay> = emptyList()
+    val previousDays: List<WeatherDay> = emptyList(),
+    /** Reverse-geocoded "City, Province" label for the coordinates used (may be blank). */
+    val locationName: String = ""
 )
 
 suspend fun fetchWeather(
+    context: Context? = null,
     latitude: Double = 14.5995,
     longitude: Double = 120.9842
 ): WeatherSnapshot? = withContext(Dispatchers.IO) {
@@ -73,6 +77,11 @@ suspend fun fetchWeather(
             val precip = hours.firstOrNull { it.isNow }?.precipChancePct
                 ?: thisWeek.firstOrNull()?.precipChancePct
                 ?: 0
+            val locationName = if (context != null) {
+                reverseGeocodeLabel(context, latitude, longitude)
+            } else {
+                ""
+            }
             WeatherSnapshot(
                 condition = weatherCodeToLabel(code),
                 temperatureC = temp,
@@ -81,7 +90,8 @@ suspend fun fetchWeather(
                 precipChancePct = precip,
                 days = thisWeek,
                 hours = hours,
-                previousDays = previousWeek
+                previousDays = previousWeek,
+                locationName = locationName
             )
         }
     }.getOrNull()

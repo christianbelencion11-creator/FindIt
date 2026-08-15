@@ -1,5 +1,10 @@
 package com.example.findit.screens
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -63,6 +68,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import com.example.findit.R
 import com.example.findit.model.Item
 import com.example.findit.ui.components.CategoryChip
@@ -88,6 +94,8 @@ import com.example.findit.util.UiPreferences
 import com.example.findit.util.WeatherSnapshot
 import com.example.findit.util.computeStats
 import com.example.findit.util.fetchWeather
+import com.example.findit.util.hasLocationPermission
+import com.example.findit.util.lastKnownDeviceLocation
 import com.example.findit.viewmodel.ItemViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -142,6 +150,12 @@ fun HomeScreen(
     var weather by remember { mutableStateOf<WeatherSnapshot?>(null) }
     var weatherLoading by remember { mutableStateOf(true) }
     var weatherRefreshKey by remember { mutableIntStateOf(0) }
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        // Once allowed, re-resolve so the weather + label follow the device location.
+        if (granted) weatherRefreshKey += 1
+    }
     val weatherSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val weatherDateHeadline = remember {
         val now = Calendar.getInstance().time
@@ -155,9 +169,22 @@ fun HomeScreen(
         base.take(5)
     }
 
+    LaunchedEffect(Unit) {
+        // Ask once (ever) so the weather can follow the user's real location.
+        if (!uiPreferences.isLocationPermissionAsked() && !hasLocationPermission(context)) {
+            uiPreferences.setLocationPermissionAsked(true)
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+    }
+
     LaunchedEffect(weatherRefreshKey) {
         weatherLoading = true
-        weather = fetchWeather()
+        val device = lastKnownDeviceLocation(context)
+        weather = if (device != null) {
+            fetchWeather(context, device.latitude, device.longitude)
+        } else {
+            fetchWeather(context)
+        }
         weatherLoading = false
     }
 
@@ -199,6 +226,7 @@ fun HomeScreen(
             item {
                 StatsSection(
                     stats = stats,
+                    onViewAllClick = onTotalItemsClick,
                     onTotalItemsClick = onTotalItemsClick,
                     onCategoriesClick = onCategoriesClick,
                     onRecentClick = onRecentClick
@@ -438,6 +466,14 @@ private fun HomeHeader(
     onWeatherClick: () -> Unit
 ) {
     val secondaryAlpha = (1f - collapseFraction).coerceIn(0f, 1f)
+    // Cycle the advice line through the tips; remember() survives header recompositions on scroll.
+    var adviceIndex by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(4500)
+            adviceIndex = (adviceIndex + 1) % homeAdviceTips.size
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -489,13 +525,41 @@ private fun HomeHeader(
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.84f),
                     modifier = Modifier.alpha(secondaryAlpha)
                 )
-                Text(
-                    text = displayName,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                ) {
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    // Friendly wave — kept outside the ellipsized name so it never gets clipped.
+                    Text(
+                        text = "👋",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
+                // Rotating short advice line — never static; fades to the next tip.
+                Crossfade(
+                    targetState = adviceIndex,
+                    animationSpec = tween(durationMillis = 600),
+                    label = "homeAdvice",
+                    modifier = Modifier
+                        .padding(top = Spacing.xxs)
+                        .alpha(secondaryAlpha)
+                ) { index ->
+                    Text(
+                        text = homeAdviceTips[index],
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.80f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
             WeatherWidget(
                 weather = weather,
@@ -760,7 +824,7 @@ private fun MascotAssistantCard(totalItems: Int, categories: Int) {
             Image(
                 painter = painterResource(R.drawable.findit_character),
                 contentDescription = null,
-                modifier = Modifier.size(76.dp),
+                modifier = Modifier.size(88.dp),
                 contentScale = ContentScale.Fit
             )
             Column(modifier = Modifier.weight(1f)) {
@@ -897,6 +961,15 @@ private fun LocalDataHomeBanner(onDismiss: () -> Unit) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Short, friendly one-liners that rotate under the user's name on Home. */
+private val homeAdviceTips = listOf(
+    "Let's keep your things safe. 💚",
+    "Tap any item to see where it is. 📍",
+    "A place for everything. 📦",
+    "Snap it, save it, find it. 📸",
+    "Never lose track of your stuff. 🔒"
+)
 
 private fun timeGreeting(): String {
     val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
