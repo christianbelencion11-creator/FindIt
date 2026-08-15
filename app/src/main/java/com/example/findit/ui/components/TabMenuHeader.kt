@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,6 +28,7 @@ fun TabMenuHeader(
     subtitle: String,
     onMenuClick: () -> Unit,
     collapseFraction: Float = 0f,
+    leadingIsBack: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val secondaryAlpha = (1f - collapseFraction).coerceIn(0f, 1f)
@@ -38,8 +40,8 @@ fun TabMenuHeader(
     ) {
         HeaderIconButton(
             onClick = onMenuClick,
-            icon = Icons.Default.Menu,
-            contentDescription = "Menu",
+            icon = if (leadingIsBack) Icons.AutoMirrored.Filled.ArrowBack else Icons.Default.Menu,
+            contentDescription = if (leadingIsBack) "Back" else "Menu",
             containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.14f),
             iconTint = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.alpha(secondaryAlpha)

@@ -5,5 +5,6 @@ enum class BottomNavTab {
     Search,
     AddItem,
     Alerts,
+    History,
     Profile
 }

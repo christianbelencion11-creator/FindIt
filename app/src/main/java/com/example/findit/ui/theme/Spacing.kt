@@ -17,7 +17,7 @@ object Spacing {
 object Dimensions {
     val cardCornerRadius    = 20.dp
     val headerCornerRadius  = 28.dp
-    val headerContentHome   = 156.dp  // icon row + greeting + name + weather chip
+    val headerContentHome   = 176.dp  // icon row + greeting + name + weather chip (+ bottom breathing room)
     val headerContentStd    = 124.dp  // title + subtitle
     val headerContentWithMenu = 124.dp  // menu + title + subtitle (same row)
     val headerContentActionsOnly = 56.dp  // Back / Refresh row only (no title in header)

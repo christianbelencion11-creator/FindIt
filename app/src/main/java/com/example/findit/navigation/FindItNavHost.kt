@@ -407,7 +407,8 @@ fun FindItNavHost(
                 onBackClick = { navController.popBackStack() },
                 onItemClick = { itemId ->
                     navController.navigate(Routes.itemDetail(itemId))
-                }
+                },
+                bottomNavVisible = false
             )
         }
 

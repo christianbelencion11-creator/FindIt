@@ -206,7 +206,8 @@ fun AddItemScreen(
                     TabMenuHeader(
                         title = headerTitle,
                         subtitle = headerSubtitle,
-                        onMenuClick = onMenuClick,
+                        onMenuClick = onBackClick,
+                        leadingIsBack = true,
                         collapseFraction = collapseFraction
                     )
                 }

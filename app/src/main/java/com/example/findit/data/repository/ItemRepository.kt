@@ -224,6 +224,18 @@ class ItemRepository(
         historyDao.deleteOlderThan(ownerUid, beforeTimestamp)
     }
 
+    suspend fun deleteHistoryEntry(id: Long): Boolean {
+        val ownerUid = _currentOwnerUid.value
+        if (ownerUid.isBlank()) return false
+        return historyDao.deleteById(ownerUid, id) > 0
+    }
+
+    suspend fun clearHistory(): Boolean {
+        val ownerUid = _currentOwnerUid.value
+        if (ownerUid.isBlank()) return false
+        return historyDao.deleteAll(ownerUid) > 0
+    }
+
     private suspend fun insertHistory(
         itemId: Long,
         itemName: String,

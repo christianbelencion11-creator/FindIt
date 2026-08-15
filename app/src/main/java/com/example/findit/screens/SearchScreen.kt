@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.findit.model.Item
 import com.example.findit.ui.components.CategoryChip
-import com.example.findit.ui.components.DraggableFab
 import com.example.findit.ui.components.EmptyState
 import com.example.findit.ui.components.FindItSearchBar
 import com.example.findit.ui.components.ItemCard
@@ -196,7 +195,8 @@ fun SearchScreen(
             TabMenuHeader(
                 title = "Search",
                 subtitle = "Find your saved items",
-                onMenuClick = onMenuClick,
+                onMenuClick = onBackClick,
+                leadingIsBack = true,
                 collapseFraction = collapseFraction
             )
         }
@@ -315,12 +315,6 @@ fun SearchScreen(
             }
         }
     }
-        DraggableFab(
-            onClick = onAddItemClick,
-            onVoiceSearchClick = { onVoiceSearchClick() },
-            onNotesClick = onNotesClick,
-            uiPreferences = uiPreferences
-        )
     }
 
     if (showFilterSheet) {

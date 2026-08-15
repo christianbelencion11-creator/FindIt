@@ -46,9 +46,9 @@ import androidx.compose.ui.unit.coerceIn
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.findit.R
+import com.example.findit.ui.theme.FindItGradientEnd
+import com.example.findit.ui.theme.FindItGradientStart
 import com.example.findit.ui.theme.Spacing
-import com.example.findit.ui.theme.gradientEndColor
-import com.example.findit.ui.theme.gradientStartColor
 
 val AuthCardColor = Color.White
 val AuthTextColor = Color(0xFF102015)
@@ -226,7 +226,9 @@ fun BrandWaveHeader(
     characterAlpha: Float = 1f,
     modifier: Modifier = Modifier
 ) {
-    val gradientColors = listOf(gradientStartColor(), gradientEndColor())
+    // Auth / intro flow always uses the original bright-green brand gradient,
+    // independent of theme — dark mode only applies inside the app after login.
+    val gradientColors = listOf(FindItGradientStart, FindItGradientEnd)
     // Status bar room + content height so brand/mascot keep full size.
     val totalHeight = contentHeight + 40.dp
 

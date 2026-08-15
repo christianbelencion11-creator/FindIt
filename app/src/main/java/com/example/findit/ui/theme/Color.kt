@@ -17,19 +17,20 @@ val FindItError          = Color(0xFFDC2626)
 val FindItGradientStart  = Color(0xFF064E3B)
 val FindItGradientEnd    = Color(0xFF22C55E)
 
-// Dark theme — noticeably lighter so text and cards are easy to read
-val FindItBlueDark          = Color(0xFF86EFAC)
-val FindItBlueLightDark     = Color(0xFF3D7A52)  // lighter — avatar stands out from surface #274D33
-val FindItBackgroundDark    = Color(0xFF1B3A24)  // medium dark green background
-val FindItSurfaceDark       = Color(0xFF274D33)  // card surfaces — clearly visible on background
-val FindItSurfaceVarDark    = Color(0xFF325C3F)
+// Dark theme — "midnight emerald": near-black charcoal base with soft green glow.
+// Only the FILL tokens are dark; text tokens stay light so contrast is preserved.
+val FindItBlueDark          = Color(0xFF4ADE80)  // vivid emerald accent / outline on dark
+val FindItBlueLightDark     = Color(0xFF213D2E)  // subtle green-tinted container (avatars/chips), lifted above surface
+val FindItBackgroundDark    = Color(0xFF070C0A)  // near-black app background, faint cool-green tint
+val FindItSurfaceDark       = Color(0xFF111A15)  // card surface — charcoal green, clearly above background
+val FindItSurfaceVarDark    = Color(0xFF18231C)  // search field / chips — a touch lighter than surface
 /** Dark card lift (top of subtle vertical gradient). */
-val FindItSurfaceGradTopDark = Color(0xFF356B45)
+val FindItSurfaceGradTopDark = Color(0xFF1A271F)
 /** Dark card anchor (bottom of subtle vertical gradient). */
-val FindItSurfaceGradBottomDark = Color(0xFF1E3F2A)
-val FindItOnSurfaceDark     = Color(0xFFEBF5EC)
-val FindItGradientStartDark = Color(0xFF0D4A2B)
-val FindItGradientEndDark   = Color(0xFF28A85A)
+val FindItSurfaceGradBottomDark = Color(0xFF0C1310)
+val FindItOnSurfaceDark     = Color(0xFFE7F2EA)
+val FindItGradientStartDark = Color(0xFF0C3D28)  // header top-left — deep emerald
+val FindItGradientEndDark   = Color(0xFF07140F)  // header bottom-right — melts into background
 
 // Premium dashboard accents — vivid (not green-only)
 val StatBlue       = Color(0xFF3B82F6)

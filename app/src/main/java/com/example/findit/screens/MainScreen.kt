@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import com.example.findit.navigation.BottomNavTab
+import com.example.findit.ui.components.AddSpeedDialMenu
 import com.example.findit.ui.components.FindItBottomBar
 import com.example.findit.ui.components.FindItNavigationDrawerContent
 import com.example.findit.viewmodel.ItemViewModel
@@ -81,6 +82,7 @@ fun MainScreen(
     var bottomNavVisible by rememberSaveable { mutableStateOf(true) }
     var lastInteraction by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var launchVoiceSearch by remember { mutableStateOf(false) }
+    var fabMenuExpanded by remember { mutableStateOf(false) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val openSearch by openSearchSignal.collectAsState()
@@ -110,8 +112,9 @@ fun MainScreen(
         }
     }
 
-    LaunchedEffect(selectedTab, lastInteraction) {
+    LaunchedEffect(selectedTab, lastInteraction, fabMenuExpanded) {
         bottomNavVisible = true
+        if (fabMenuExpanded) return@LaunchedEffect
         delay(NAV_IDLE_HIDE_MS)
         bottomNavVisible = false
     }
@@ -123,6 +126,11 @@ fun MainScreen(
     BackHandler(enabled = !drawerState.isOpen && selectedTab != BottomNavTab.Home) {
         selectedTab = BottomNavTab.Home
         onUserInteraction()
+    }
+
+    // Highest priority when the add-menu is open: back just closes it.
+    BackHandler(enabled = fabMenuExpanded) {
+        fabMenuExpanded = false
     }
 
     ModalNavigationDrawer(
@@ -161,7 +169,7 @@ fun MainScreen(
                     },
                     onHistory = {
                         onUserInteraction()
-                        closeDrawerThen { onHistoryClick() }
+                        closeDrawerThen { selectedTab = BottomNavTab.History }
                     },
                     onNotes = {
                         onUserInteraction()
@@ -270,6 +278,10 @@ fun MainScreen(
                         viewModel = viewModel,
                         onItemClick = onItemClick,
                         embedded = true,
+                        onBackClick = {
+                            onUserInteraction()
+                            selectedTab = BottomNavTab.Home
+                        },
                         onAddItemClick = {
                             onUserInteraction()
                             selectedTab = BottomNavTab.AddItem
@@ -294,9 +306,9 @@ fun MainScreen(
                             onUserInteraction()
                             selectedTab = BottomNavTab.Home
                         },
-                        onMenuClick = {
+                        onBackClick = {
                             onUserInteraction()
-                            scope.launch { drawerState.open() }
+                            selectedTab = BottomNavTab.Home
                         },
                         onUserInteraction = ::onUserInteraction,
                         bottomNavVisible = bottomNavVisible
@@ -308,6 +320,16 @@ fun MainScreen(
                             onUserInteraction()
                             scope.launch { drawerState.open() }
                         },
+                        onUserInteraction = ::onUserInteraction,
+                        bottomNavVisible = bottomNavVisible
+                    )
+                    BottomNavTab.History -> HistoryScreen(
+                        viewModel = viewModel,
+                        onBackClick = {
+                            onUserInteraction()
+                            selectedTab = BottomNavTab.Home
+                        },
+                        onItemClick = onItemClick,
                         onUserInteraction = ::onUserInteraction,
                         bottomNavVisible = bottomNavVisible
                     )
@@ -362,6 +384,27 @@ fun MainScreen(
                 }
             }
 
+            AddSpeedDialMenu(
+                expanded = fabMenuExpanded,
+                onDismiss = { fabMenuExpanded = false },
+                onAddItem = {
+                    fabMenuExpanded = false
+                    onUserInteraction()
+                    selectedTab = BottomNavTab.AddItem
+                },
+                onNotes = {
+                    fabMenuExpanded = false
+                    onUserInteraction()
+                    onNotesClick()
+                },
+                onMicrophone = {
+                    fabMenuExpanded = false
+                    onUserInteraction()
+                    launchVoiceSearch = true
+                    selectedTab = BottomNavTab.Search
+                }
+            )
+
             AnimatedVisibility(
                 visible = bottomNavVisible,
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -372,8 +415,14 @@ fun MainScreen(
                     selectedTab = selectedTab,
                     onTabSelected = { tab ->
                         onUserInteraction()
+                        fabMenuExpanded = false
                         selectedTab = tab
-                    }
+                    },
+                    onAddClick = {
+                        onUserInteraction()
+                        fabMenuExpanded = !fabMenuExpanded
+                    },
+                    addExpanded = fabMenuExpanded
                 )
             }
         }

@@ -66,7 +66,6 @@ import androidx.compose.ui.unit.dp
 import com.example.findit.R
 import com.example.findit.model.Item
 import com.example.findit.ui.components.CategoryChip
-import com.example.findit.ui.components.DraggableFab
 import com.example.findit.ui.components.EmptyState
 import com.example.findit.ui.components.FindItSearchBar
 import com.example.findit.ui.components.HomeWeatherSheetContent
@@ -360,12 +359,6 @@ fun HomeScreen(
                 },
                 bodyContent = body
             )
-            DraggableFab(
-                onClick = onAddItemClick,
-                onVoiceSearchClick = onVoiceSearchClick,
-                onNotesClick = onNotesClick,
-                uiPreferences = uiPreferences
-            )
         }
     } else {
         Box(
@@ -393,12 +386,6 @@ fun HomeScreen(
                     )
                 },
                 bodyContent = body
-            )
-            DraggableFab(
-                onClick = onAddItemClick,
-                onVoiceSearchClick = onVoiceSearchClick,
-                onNotesClick = onNotesClick,
-                uiPreferences = uiPreferences
             )
         }
     }

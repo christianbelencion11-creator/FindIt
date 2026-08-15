@@ -233,6 +233,20 @@ class ItemViewModel(
         }
     }
 
+    fun deleteHistoryEntry(entryId: Long, onDone: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            val ok = repository.deleteHistoryEntry(entryId)
+            onDone(ok)
+        }
+    }
+
+    fun clearHistory(onDone: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            val ok = repository.clearHistory()
+            onDone(ok)
+        }
+    }
+
     fun purgeExpiredFoundItems() {
         viewModelScope.launch {
             val cutoff = System.currentTimeMillis() - FOUND_RETENTION_MS

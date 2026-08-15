@@ -28,4 +28,10 @@ interface ItemHistoryDao {
         """
     )
     suspend fun deleteOlderThan(ownerUid: String, beforeTimestamp: Long): Int
+
+    @Query("DELETE FROM item_history WHERE ownerUid = :ownerUid AND id = :id")
+    suspend fun deleteById(ownerUid: String, id: Long): Int
+
+    @Query("DELETE FROM item_history WHERE ownerUid = :ownerUid")
+    suspend fun deleteAll(ownerUid: String): Int
 }
