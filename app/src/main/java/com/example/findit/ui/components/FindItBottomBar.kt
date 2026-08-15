@@ -105,8 +105,7 @@ fun FindItBottomBar(
                 )
         )
 
-        // Solid pill panel. The center + floats above it — no molded "pod" ring behind the
-        // button, so there's no ugly filled bump/outline showing in the gap beneath the +.
+        // Solid panel (no cut-out notch, so nothing shows through behind it).
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -163,7 +162,18 @@ fun FindItBottomBar(
             }
         }
 
-        // Floating center + button. Tapping toggles the add-menu; the + morphs into an ×.
+        // Raised "pod" ring in panel color, so the + reads as docked (no hole).
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .size(podSize)
+                .shadow(elevation = 6.dp, shape = CircleShape, clip = false)
+                .clip(CircleShape)
+                .background(panelBrush)
+                .border(width = 1.dp, color = edgeColor, shape = CircleShape)
+        )
+
+        // Docked center + button. Tapping toggles the add-menu; the + morphs into an ×.
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
