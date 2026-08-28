@@ -21,12 +21,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.findit.FindItApplication
-import com.example.findit.auth.FirebaseAuthRepository
+import com.example.findit.auth.AccountRepository
+import com.example.findit.auth.LocalAccountStore
 import com.example.findit.auth.SecretRecoveryRepository
-import com.example.findit.auth.UsernameAuth
 import com.example.findit.screens.ItemDetailScreen
 import com.example.findit.screens.AboutScreen
 import com.example.findit.screens.AddItemScreen
+import com.example.findit.screens.CardEditorScreen
+import com.example.findit.screens.CardsScreen
 import com.example.findit.screens.HistoryScreen
 import com.example.findit.screens.MainScreen
 import com.example.findit.screens.NewsScreen
@@ -76,42 +78,46 @@ fun FindItNavHost(
     val context = LocalContext.current
     val application = context.applicationContext as FindItApplication
     val authPreferences = remember { AuthPreferences(context) }
+    val accountStore = remember { LocalAccountStore(context) }
     val authRepository = remember {
-        FirebaseAuthRepository(
+        AccountRepository(
             authPreferences,
+            accountStore,
             application.repository,
-            application.noteRepository
+            application.noteRepository,
+            application.bankCardRepository
         )
     }
-    val recoveryRepository = remember { SecretRecoveryRepository() }
+    val recoveryRepository = remember { SecretRecoveryRepository(accountStore) }
     val viewModel: ItemViewModel = viewModel(
         factory = ItemViewModel.Factory
     )
 
-    fun syncProfileForUser(user: FirebaseAuthRepository.SignedInUser) {
-        val resolvedUsername = UsernameAuth.usernameFromSyntheticEmail(user.email)
-            ?: user.displayName.takeIf { it.isNotBlank() }
+    fun syncProfileForUser(user: AccountRepository.SignedInUser) {
+        val resolvedUsername = user.displayName.takeIf { it.isNotBlank() }
             ?: ProfilePreferences.DEFAULT_USERNAME
         profileStore.syncFromAuthUser(
             firebaseUid = user.uid,
-            displayName = user.displayName.ifBlank { resolvedUsername },
+            displayName = resolvedUsername,
             username = resolvedUsername,
             photoUrl = user.photoUrl
         )
     }
 
     fun restoreItemOwnerFromSession() {
-        val uid = authRepository.currentUser?.uid ?: authPreferences.getFirebaseUid()
+        val uid = authRepository.currentUid ?: authPreferences.getFirebaseUid()
         if (uid.isNotBlank()) {
             application.repository.setOwnerUid(uid)
             application.noteRepository.setOwnerUid(uid)
+            application.bankCardRepository.setOwnerUid(uid)
         }
     }
 
-    fun navigateToMainAfterAuth(user: FirebaseAuthRepository.SignedInUser) {
+    fun navigateToMainAfterAuth(user: AccountRepository.SignedInUser) {
         authPreferences.setHasSeenGetStarted(true)
         application.repository.setOwnerUid(user.uid)
         application.noteRepository.setOwnerUid(user.uid)
+        application.bankCardRepository.setOwnerUid(user.uid)
         syncProfileForUser(user)
         if (authPreferences.isPinSet(user.uid)) {
             navController.navigate(Routes.UNLOCK) {
@@ -306,6 +312,9 @@ fun FindItNavHost(
                 onNotesClick = {
                     navController.navigate(Routes.NOTES)
                 },
+                onCardsClick = {
+                    navController.navigate(Routes.CARDS)
+                },
                 onAboutClick = {
                     navController.navigate(Routes.ABOUT)
                 },
@@ -337,7 +346,8 @@ fun FindItNavHost(
                 mode = StatsBrowseMode.AllItems,
                 viewModel = viewModel,
                 onBackClick = { navController.popBackStack() },
-                onItemClick = { itemId -> navController.navigate(Routes.itemDetail(itemId)) }
+                onItemClick = { itemId -> navController.navigate(Routes.itemDetail(itemId)) },
+                onAddItemClick = { navController.navigate(Routes.ADD_ITEM) }
             )
         }
 
@@ -364,6 +374,24 @@ fun FindItNavHost(
                 viewModel = viewModel,
                 onBackClick = { navController.popBackStack() },
                 onItemClick = { itemId -> navController.navigate(Routes.itemDetail(itemId)) }
+            )
+        }
+
+        composable(
+            route = Routes.ADD_ITEM,
+            enterTransition = {
+                fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 4 }
+            },
+            exitTransition = {
+                fadeOut(tween(300)) + slideOutVertically(tween(300)) { it / 4 }
+            }
+        ) {
+            AddItemScreen(
+                viewModel = viewModel,
+                embedded = false,
+                bottomNavVisible = false,
+                onBackClick = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
             )
         }
 
@@ -436,6 +464,34 @@ fun FindItNavHost(
             val noteId = backStackEntry.arguments?.getLong("noteId") ?: 0L
             NoteEditorScreen(
                 noteId = noteId,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.CARDS) {
+            CardsScreen(
+                onBackClick = { navController.popBackStack() },
+                onOpenCard = { cardId ->
+                    navController.navigate(Routes.cardEditor(cardId))
+                },
+                onCreateCard = {
+                    navController.navigate(Routes.cardEditor(0L))
+                }
+            )
+        }
+
+        composable(
+            route = Routes.CARD_EDITOR,
+            arguments = listOf(
+                navArgument("cardId") {
+                    type = NavType.LongType
+                    defaultValue = 0L
+                }
+            )
+        ) { backStackEntry ->
+            val cardId = backStackEntry.arguments?.getLong("cardId") ?: 0L
+            CardEditorScreen(
+                cardId = cardId,
                 onBackClick = { navController.popBackStack() }
             )
         }

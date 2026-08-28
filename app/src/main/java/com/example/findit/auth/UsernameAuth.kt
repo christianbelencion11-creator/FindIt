@@ -1,8 +1,9 @@
 package com.example.findit.auth
 
 /**
- * Username-based accounts use a synthetic Firebase Auth email so MPIN / ownership
- * keep working while the UI never shows an email field.
+ * Username helpers for local accounts: normalization and validation. Accounts are stored
+ * on-device by [LocalAccountStore]; the [syntheticEmail] helpers are legacy and unused now
+ * that there is no Firebase Auth.
  */
 object UsernameAuth {
     private const val DOMAIN = "users.iremember.app"

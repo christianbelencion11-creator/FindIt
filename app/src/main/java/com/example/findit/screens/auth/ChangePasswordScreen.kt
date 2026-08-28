@@ -31,7 +31,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.findit.auth.FirebaseAuthRepository
+import com.example.findit.auth.AccountRepository
 import com.example.findit.ui.components.AuthErrorText
 import com.example.findit.ui.components.AuthMutedColor
 import com.example.findit.ui.components.AuthShell
@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ChangePasswordScreen(
-    authRepository: FirebaseAuthRepository,
+    authRepository: AccountRepository,
     username: String,
     onCancel: () -> Unit,
     onSuccess: () -> Unit = onCancel
@@ -182,8 +182,8 @@ fun ChangePasswordScreen(
                                     newPassword
                                 )
                             ) {
-                                is FirebaseAuthRepository.AuthResult.Success -> success = true
-                                is FirebaseAuthRepository.AuthResult.Error -> error = result.message
+                                is AccountRepository.AuthResult.Success -> success = true
+                                is AccountRepository.AuthResult.Error -> error = result.message
                             }
                             isLoading = false
                         }

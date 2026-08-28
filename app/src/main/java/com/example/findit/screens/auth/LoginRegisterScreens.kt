@@ -51,7 +51,7 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.findit.auth.FirebaseAuthRepository
+import com.example.findit.auth.AccountRepository
 import com.example.findit.auth.UsernameAuth
 import com.example.findit.ui.components.AuthCardColor
 import com.example.findit.ui.components.AuthErrorText
@@ -66,9 +66,9 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
-    authRepository: FirebaseAuthRepository,
+    authRepository: AccountRepository,
     authPreferences: AuthPreferences,
-    onLoginSuccess: (FirebaseAuthRepository.SignedInUser) -> Unit,
+    onLoginSuccess: (AccountRepository.SignedInUser) -> Unit,
     onNavigateToRegister: () -> Unit,
     onNavigateToForgotPassword: (username: String) -> Unit
 ) {
@@ -134,9 +134,9 @@ fun LoginScreen(
                         scope.launch {
                             try {
                                 when (val result = authRepository.signInWithUsername(username, password)) {
-                                    is FirebaseAuthRepository.AuthResult.Success ->
+                                    is AccountRepository.AuthResult.Success ->
                                         onLoginSuccess(result.user)
-                                    is FirebaseAuthRepository.AuthResult.Error -> error = result.message
+                                    is AccountRepository.AuthResult.Error -> error = result.message
                                 }
                             } finally {
                                 isLoading = false
@@ -177,9 +177,9 @@ fun LoginScreen(
 
 @Composable
 fun RegisterScreen(
-    authRepository: FirebaseAuthRepository,
+    authRepository: AccountRepository,
     authPreferences: AuthPreferences,
-    onRegisterSuccess: (FirebaseAuthRepository.SignedInUser) -> Unit,
+    onRegisterSuccess: (AccountRepository.SignedInUser) -> Unit,
     onNavigateToLogin: () -> Unit,
     onPrivacyPolicyClick: () -> Unit = {}
 ) {
@@ -194,12 +194,12 @@ fun RegisterScreen(
     var isLoading by remember { mutableStateOf(false) }
     var showExistingAccountBanner by remember { mutableStateOf(false) }
     var pendingSuccessUser by remember {
-        mutableStateOf<FirebaseAuthRepository.SignedInUser?>(null)
+        mutableStateOf<AccountRepository.SignedInUser?>(null)
     }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        showExistingAccountBanner = authRepository.isFirebaseSignedIn() ||
+        showExistingAccountBanner = authRepository.isSignedIn() ||
             (authPreferences.isRegistered() && authPreferences.getUsername().isNotBlank())
     }
 
@@ -263,9 +263,9 @@ fun RegisterScreen(
                                             secret = secretDetails
                                         )
                                     ) {
-                                        is FirebaseAuthRepository.AuthResult.Success ->
+                                        is AccountRepository.AuthResult.Success ->
                                             pendingSuccessUser = result.user
-                                        is FirebaseAuthRepository.AuthResult.Error ->
+                                        is AccountRepository.AuthResult.Error ->
                                             error = result.message
                                     }
                                 } catch (e: Exception) {

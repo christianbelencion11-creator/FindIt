@@ -47,8 +47,9 @@ suspend fun lastKnownDeviceLocation(context: Context): DeviceLocation? =
     }
 
 /**
- * Turns coordinates into a short "City, Province" label via reverse geocoding.
- * Returns an empty string when geocoding is unavailable or yields nothing, so the
+ * Turns coordinates into a short city label via reverse geocoding.
+ * Only the city/locality is returned (no province/region), so the weather chip stays
+ * compact. Returns an empty string when geocoding is unavailable or yields nothing, so the
  * UI can simply hide the location line.
  */
 suspend fun reverseGeocodeLabel(context: Context, latitude: Double, longitude: Double): String =
@@ -59,17 +60,11 @@ suspend fun reverseGeocodeLabel(context: Context, latitude: Double, longitude: D
             @Suppress("DEPRECATION")
             val address = geocoder.getFromLocation(latitude, longitude, 1)?.firstOrNull()
                 ?: return@runCatching ""
+            // City name only — keeps the header weather chip from crowding the greeting.
             val city = address.locality
                 ?: address.subLocality
                 ?: address.subAdminArea
                 ?: address.adminArea
-            val region = address.subAdminArea ?: address.adminArea
-            when {
-                city != null && region != null && !region.equals(city, ignoreCase = true) ->
-                    "$city, $region"
-                city != null -> city
-                region != null -> region
-                else -> address.countryName ?: ""
-            }
+            city ?: address.countryName ?: ""
         }.getOrDefault("")
     }

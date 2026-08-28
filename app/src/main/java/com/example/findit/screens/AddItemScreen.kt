@@ -2,6 +2,7 @@ package com.example.findit.screens
 
 import android.content.Context
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -110,6 +111,7 @@ fun AddItemScreen(
     var remindHour by remember { mutableIntStateOf(8) }
     var remindMinute by remember { mutableIntStateOf(0) }
     var formLoaded by remember { mutableStateOf(!isEditMode) }
+    var showErrors by remember { mutableStateOf(false) }
     var showPhotoSourcePicker by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var savedItemName by remember { mutableStateOf("") }
@@ -146,6 +148,10 @@ fun AddItemScreen(
 
     val bottomScrollPadding = mainTabBottomScrollPadding(bottomNavVisible)
     val canSave = itemName.isNotBlank() && location.isNotBlank() && category.isNotBlank()
+    // Only surface field errors after the user has tried to save, so the form isn't red on open.
+    val nameError = showErrors && itemName.isBlank()
+    val locationError = showErrors && location.isBlank()
+    val categoryError = showErrors && category.isBlank()
     val headerTitle = if (isEditMode) "Edit Item" else "Add Item"
     val headerSubtitle = if (isEditMode) {
         "Update this item in your collection"
@@ -332,13 +338,17 @@ fun AddItemScreen(
                     value = itemName,
                     onValueChange = { itemName = it },
                     placeholder = "Enter the name of the item",
-                    leadingIcon = Icons.Default.Inventory2
+                    leadingIcon = Icons.Default.Inventory2,
+                    isError = nameError,
+                    errorMessage = "Please complete this field"
                 )
                 IconTextField(
                     value = location,
                     onValueChange = { location = it },
                     placeholder = "Where did you last see it?",
-                    leadingIcon = Icons.Default.Place
+                    leadingIcon = Icons.Default.Place,
+                    isError = locationError,
+                    errorMessage = "Please complete this field"
                 )
                 IconTextField(
                     value = notes,
@@ -360,6 +370,14 @@ fun AddItemScreen(
                             onClick = { category = cat }
                         )
                     }
+                }
+                if (categoryError) {
+                    Text(
+                        text = "Please choose a category",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(start = Spacing.xs, top = Spacing.xs)
+                    )
                 }
 
                 RemindMeCard(
@@ -388,7 +406,15 @@ fun AddItemScreen(
 
                 Button(
                     onClick = {
-                        if (!canSave) return@Button
+                        if (!canSave) {
+                            showErrors = true
+                            Toast.makeText(
+                                context,
+                                "Please complete the required fields.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
                         if (isEditMode) {
                             viewModel.updateItem(
                                 itemId = itemId!!,
@@ -427,6 +453,7 @@ fun AddItemScreen(
                                     remindEnabled = false
                                     remindHour = 8
                                     remindMinute = 0
+                                    showErrors = false
                                     showSuccessDialog = true
                                 }
                             )
@@ -436,7 +463,7 @@ fun AddItemScreen(
                         .fillMaxWidth()
                         .height(54.dp),
                     shape = RoundedCornerShape(16.dp),
-                    enabled = canSave && (!isEditMode || formLoaded),
+                    enabled = !isEditMode || formLoaded,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
@@ -554,7 +581,9 @@ private fun IconTextField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     leadingIcon: ImageVector,
-    minLines: Int = 1
+    minLines: Int = 1,
+    isError: Boolean = false,
+    errorMessage: String? = null
 ) {
     OutlinedTextField(
         value = value,
@@ -562,6 +591,7 @@ private fun IconTextField(
         modifier = Modifier.fillMaxWidth(),
         singleLine = minLines == 1,
         minLines = minLines,
+        isError = isError,
         placeholder = {
             Text(
                 text = placeholder,
@@ -573,8 +603,17 @@ private fun IconTextField(
             Icon(
                 imageVector = leadingIcon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+                tint = if (isError) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.primary
+                }
             )
+        },
+        supportingText = if (isError && errorMessage != null) {
+            { Text(text = errorMessage, style = MaterialTheme.typography.bodySmall) }
+        } else {
+            null
         },
         shape = RoundedCornerShape(14.dp),
         colors = OutlinedTextFieldDefaults.colors(

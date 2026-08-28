@@ -19,6 +19,8 @@ object Routes {
     const val HISTORY = "history"
     const val NOTES = "notes"
     const val NOTE_EDITOR = "note_editor?noteId={noteId}"
+    const val CARDS = "cards"
+    const val CARD_EDITOR = "card_editor?cardId={cardId}"
     const val ABOUT = "about"
     const val PRIVACY_POLICY = "privacy_policy"
     const val ALL_ITEMS = "all_items"
@@ -43,4 +45,6 @@ object Routes {
     }
 
     fun noteEditor(noteId: Long = 0L): String = "note_editor?noteId=$noteId"
+
+    fun cardEditor(cardId: Long = 0L): String = "card_editor?cardId=$cardId"
 }

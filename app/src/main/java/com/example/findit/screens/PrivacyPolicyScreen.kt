@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -77,7 +80,9 @@ fun PrivacyPolicyScreen(
                 start = Spacing.xl,
                 end = Spacing.xl,
                 top = Spacing.xl,
-                bottom = Spacing.xxxl
+                // Add the system nav-bar inset so section 10 isn't hidden behind the gesture bar.
+                bottom = Spacing.xxxl +
+                    WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
             ),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg)
         ) {
@@ -94,11 +99,12 @@ fun PrivacyPolicyScreen(
             item {
                 PolicySection(
                     title = "2. Account information",
-                    body = "When you create an account, we process your username, email address, and authentication " +
-                        "credentials through Firebase Authentication and related Firebase/Google Cloud services. " +
-                        "Account profile fields you choose to save (such as display name or bio) may be stored " +
-                        "with your account for sign-in and profile features. We use this data to authenticate you, " +
-                        "secure your account, and provide account recovery features (such as password reset)."
+                    body = "When you create an account, your username, email address, and authentication " +
+                        "credentials are stored only on your device in encrypted local storage — they are never " +
+                        "uploaded to any server or cloud service. Account profile fields you choose to save " +
+                        "(such as display name or bio) are also kept locally for sign-in and profile features. " +
+                        "This data is used to authenticate you, secure your account, and provide account recovery " +
+                        "features (such as password reset)."
                 )
             }
             item {
@@ -118,16 +124,16 @@ fun PrivacyPolicyScreen(
                         "• Microphone — for voice search (speech is processed by your device’s speech recognition service).\n" +
                         "• Notifications — for item reminders.\n" +
                         "• Camera / photos — if you attach images to items.\n" +
-                        "• Internet — for account sign-in, password recovery, and news headlines.\n\n" +
+                        "• Internet — for news headlines and weather updates.\n\n" +
                         "You can revoke permissions in your device settings. Some features will stop working without them."
                 )
             }
             item {
                 PolicySection(
                     title = "5. Third-party services",
-                    body = "We use third-party services that process data according to their own policies:\n\n" +
-                        "• Google Firebase (Authentication, Firestore, Cloud Functions, Analytics as configured) " +
-                        "for accounts and related backend features.\n" +
+                    body = "Account sign-in works entirely on your device, so no third-party account or cloud " +
+                        "backend is used. Some optional features do rely on third-party services that process " +
+                        "data according to their own policies:\n\n" +
                         "• On-device / Google speech recognition when you use voice search.\n" +
                         "• External news RSS feeds when you open News (headlines are fetched over the network).\n\n" +
                         "We do not sell your personal information."
@@ -146,10 +152,9 @@ fun PrivacyPolicyScreen(
                 PolicySection(
                     title = "7. Uninstall and data loss",
                     body = "Uninstalling IRemember removes local app data on your device, including saved items, " +
-                        "photos stored by the app, reminders, and history. IRemember cannot restore that local data " +
-                        "after uninstall because it is not synced to IRemember servers. Your account credentials " +
-                        "with Firebase may still exist until you delete the account through supported account flows " +
-                        "or provider tools."
+                        "photos stored by the app, reminders, history, and your account credentials. Because your " +
+                        "account and its data are stored only on your device and are not synced to any server, " +
+                        "IRemember cannot restore them after uninstall."
                 )
             }
             item {

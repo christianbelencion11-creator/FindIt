@@ -27,13 +27,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.findit.R
-import com.example.findit.auth.FirebaseAuthRepository
+import com.example.findit.auth.AccountRepository
 import com.example.findit.util.AuthPreferences
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    authRepository: FirebaseAuthRepository,
+    authRepository: AccountRepository,
     authPreferences: AuthPreferences,
     onRestoreSession: () -> Unit = {},
     onNavigateToGetStarted: () -> Unit,
@@ -46,12 +46,9 @@ fun SplashScreen(
     LaunchedEffect(Unit) {
         visible = true
         delay(2200)
-        val uid = authRepository.currentUser?.uid.orEmpty()
+        val uid = authRepository.currentUid.orEmpty()
         when {
-            !authRepository.isFirebaseSignedIn() || uid.isBlank() -> {
-                if (authPreferences.isLoggedIn()) {
-                    authPreferences.logout()
-                }
+            !authRepository.isSignedIn() || uid.isBlank() -> {
                 if (authPreferences.hasSeenGetStarted()) {
                     onNavigateToLogin()
                 } else {

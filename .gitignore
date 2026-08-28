@@ -13,6 +13,4 @@
 /captures
 .externalNativeBuild
 local.properties
-app/google-services.json
-firebase-debug.log
 *.log

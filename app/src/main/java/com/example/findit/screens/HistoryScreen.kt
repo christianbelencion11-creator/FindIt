@@ -459,10 +459,13 @@ private fun HistoryEntryCard(
                 )
             }
             Spacer(modifier = Modifier.width(Spacing.md))
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     Text(
                         text = style.label,
@@ -470,9 +473,13 @@ private fun HistoryEntryCard(
                         fontWeight = FontWeight.SemiBold,
                         color = style.color
                     )
-                    Text(
-                        text = "·",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Box(
+                        modifier = Modifier
+                            .size(3.dp)
+                            .clip(CircleShape)
+                            .background(
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                            )
                     )
                     Text(
                         text = formatRelativeTime(entry.createdAt, now),
@@ -482,7 +489,6 @@ private fun HistoryEntryCard(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = entry.itemName,
                     style = MaterialTheme.typography.titleSmall,

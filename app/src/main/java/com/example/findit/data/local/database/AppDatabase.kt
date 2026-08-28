@@ -6,22 +6,30 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.findit.data.local.dao.BankCardDao
 import com.example.findit.data.local.dao.ItemDao
 import com.example.findit.data.local.dao.ItemHistoryDao
 import com.example.findit.data.local.dao.NoteDao
+import com.example.findit.data.local.entity.BankCardEntity
 import com.example.findit.data.local.entity.ItemEntity
 import com.example.findit.data.local.entity.ItemHistoryEntity
 import com.example.findit.data.local.entity.NoteEntity
 
 @Database(
-    entities = [ItemEntity::class, ItemHistoryEntity::class, NoteEntity::class],
-    version = 7,
+    entities = [
+        ItemEntity::class,
+        ItemHistoryEntity::class,
+        NoteEntity::class,
+        BankCardEntity::class
+    ],
+    version = 8,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun itemDao(): ItemDao
     abstract fun itemHistoryDao(): ItemHistoryDao
     abstract fun noteDao(): NoteDao
+    abstract fun bankCardDao(): BankCardDao
 
     companion object {
         @Volatile
@@ -118,6 +126,27 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS bank_cards (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        ownerUid TEXT NOT NULL,
+                        bankName TEXT NOT NULL,
+                        cardHolder TEXT NOT NULL,
+                        cardNumber TEXT NOT NULL,
+                        cardType TEXT NOT NULL,
+                        balance REAL NOT NULL,
+                        colorIndex INTEGER NOT NULL,
+                        dateCreated INTEGER NOT NULL,
+                        dateUpdated INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -131,7 +160,8 @@ abstract class AppDatabase : RoomDatabase() {
                         MIGRATION_3_4,
                         MIGRATION_4_5,
                         MIGRATION_5_6,
-                        MIGRATION_6_7
+                        MIGRATION_6_7,
+                        MIGRATION_7_8
                     )
                     .build()
                 INSTANCE = instance

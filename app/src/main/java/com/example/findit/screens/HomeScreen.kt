@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Inventory
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -68,6 +70,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel as composeViewModel
 import kotlinx.coroutines.delay
 import com.example.findit.R
 import com.example.findit.model.Item
@@ -89,6 +92,7 @@ import com.example.findit.ui.theme.darkCardGradientFill
 import com.example.findit.ui.theme.darkSurfaceBorder
 import com.example.findit.ui.theme.isAppDarkTheme
 import com.example.findit.ui.theme.mainTabBottomScrollPadding
+import com.example.findit.util.CardFormat
 import com.example.findit.util.ReminderTimeUtils
 import com.example.findit.util.UiPreferences
 import com.example.findit.util.WeatherSnapshot
@@ -96,7 +100,9 @@ import com.example.findit.util.computeStats
 import com.example.findit.util.fetchWeather
 import com.example.findit.util.hasLocationPermission
 import com.example.findit.util.lastKnownDeviceLocation
+import com.example.findit.viewmodel.BankCardViewModel
 import com.example.findit.viewmodel.ItemViewModel
+import com.example.findit.viewmodel.NoteViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -126,13 +132,20 @@ fun HomeScreen(
     onCategoriesClick: () -> Unit = {},
     onRecentClick: () -> Unit = {},
     onVoiceSearchClick: () -> Unit = {},
-    onNotesClick: () -> Unit = {}
+    onNotesClick: () -> Unit = {},
+    onCardsClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val uiPreferences = remember(context) { UiPreferences(context) }
     val allItems by viewModel.allItems.collectAsState()
     val activeReminders by viewModel.activeReminders.collectAsState()
     val overdueUnfound by viewModel.overdueUnfoundItems.collectAsState()
+    // Wallet + Notes live on Home too, so the whole library is visible in one place.
+    val bankVm: BankCardViewModel = composeViewModel(factory = BankCardViewModel.Factory)
+    val notesVm: NoteViewModel = composeViewModel(factory = NoteViewModel.Factory)
+    val walletTotal by bankVm.totalBalance.collectAsState()
+    val cards by bankVm.allCards.collectAsState()
+    val notes by notesVm.allNotes.collectAsState()
     val stats = computeStats(allItems)
     val uniqueCategories = remember(allItems) { allItems.map { it.category }.distinct() }
     val locationGroups = remember(allItems) {
@@ -230,6 +243,16 @@ fun HomeScreen(
                     onTotalItemsClick = onTotalItemsClick,
                     onCategoriesClick = onCategoriesClick,
                     onRecentClick = onRecentClick
+                )
+            }
+
+            item {
+                LibraryQuickAccess(
+                    walletTotal = walletTotal,
+                    cardCount = cards.size,
+                    noteCount = notes.size,
+                    onWalletClick = onCardsClick,
+                    onNotesClick = onNotesClick
                 )
             }
 
@@ -838,6 +861,132 @@ private fun MascotAssistantCard(totalItems: Int, categories: Int) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = Spacing.xxs)
+                )
+            }
+        }
+    }
+}
+
+// ─── Browse by location ─────────────────────────────────────────────────────────
+
+@Composable
+private fun LibraryQuickAccess(
+    walletTotal: Double,
+    cardCount: Int,
+    noteCount: Int,
+    onWalletClick: () -> Unit,
+    onNotesClick: () -> Unit
+) {
+    Column {
+        Text(
+            text = "Your library",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = Spacing.sm)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md)
+        ) {
+            QuickAccessCard(
+                icon = Icons.Outlined.AccountBalanceWallet,
+                accent = Color(0xFF10B981),
+                label = "Wallet",
+                primary = CardFormat.peso(walletTotal),
+                secondary = if (cardCount == 1) "1 card" else "$cardCount cards",
+                onClick = onWalletClick,
+                modifier = Modifier.weight(1f)
+            )
+            QuickAccessCard(
+                icon = Icons.AutoMirrored.Filled.Notes,
+                accent = Color(0xFF0D9488),
+                label = "Notes",
+                primary = noteCount.toString(),
+                secondary = if (noteCount == 1) "note saved" else "notes saved",
+                onClick = onNotesClick,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickAccessCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    accent: Color,
+    label: String,
+    primary: String,
+    secondary: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val dark = isAppDarkTheme()
+    val shape = RoundedCornerShape(Dimensions.cardCornerRadius)
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = shape,
+        border = if (dark) darkSurfaceBorder() else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (dark) 0.dp else Dimensions.cardElevation
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (dark) Color.Transparent else MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .darkCardGradientFill(dark)
+                .padding(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(accent.copy(alpha = 0.16f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = accent,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Column {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = primary,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = secondary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

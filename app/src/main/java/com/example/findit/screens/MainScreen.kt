@@ -70,6 +70,7 @@ fun MainScreen(
     onNotificationsClick: () -> Unit = {},
     onHistoryClick: () -> Unit = {},
     onNotesClick: () -> Unit = {},
+    onCardsClick: () -> Unit = {},
     onAboutClick: () -> Unit = {},
     onLogout: () -> Unit = {},
     onAllItemsClick: () -> Unit = {},
@@ -175,6 +176,10 @@ fun MainScreen(
                         onUserInteraction()
                         closeDrawerThen { onNotesClick() }
                     },
+                    onCards = {
+                        onUserInteraction()
+                        closeDrawerThen { onCardsClick() }
+                    },
                     onProfile = {
                         onUserInteraction()
                         closeDrawerThen { selectedTab = BottomNavTab.Profile }
@@ -272,6 +277,10 @@ fun MainScreen(
                         onNotesClick = {
                             onUserInteraction()
                             onNotesClick()
+                        },
+                        onCardsClick = {
+                            onUserInteraction()
+                            onCardsClick()
                         }
                     )
                     BottomNavTab.Search -> SearchScreen(
@@ -396,6 +405,11 @@ fun MainScreen(
                     fabMenuExpanded = false
                     onUserInteraction()
                     onNotesClick()
+                },
+                onCards = {
+                    fabMenuExpanded = false
+                    onUserInteraction()
+                    onCardsClick()
                 },
                 onMicrophone = {
                     fabMenuExpanded = false

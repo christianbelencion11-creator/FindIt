@@ -61,11 +61,11 @@
 
     <h2>2. Account information</h2>
     <p>
-      When you create an account, we process your username, email address, and authentication
-      credentials through Firebase Authentication and related Firebase/Google Cloud services.
-      Account profile fields you choose to save may be stored with your account for sign-in and
-      profile features. We use this data to authenticate you, secure your account, and provide
-      account recovery features.
+      When you create an account, your username, email address, and authentication credentials are
+      stored only on your device in encrypted local storage — they are never uploaded to any server
+      or cloud service. Account profile fields you choose to save may be kept locally for sign-in and
+      profile features. This data is used to authenticate you, secure your account, and provide
+      account recovery features (such as password reset).
     </p>
 
     <h2>3. Item data (local only)</h2>
@@ -81,13 +81,14 @@
       <li>Microphone — for voice search</li>
       <li>Notifications — for item reminders</li>
       <li>Camera / photos — if you attach images to items</li>
-      <li>Internet — for account sign-in, password recovery, and news headlines</li>
+      <li>Internet — for news headlines and weather updates</li>
     </ul>
 
     <h2>5. Third-party services</h2>
     <p>
-      We use Google Firebase for accounts and related backend features; on-device / Google speech
-      recognition for voice search; and external news RSS feeds when you open News. We do not sell
+      Account sign-in works entirely on your device, so no third-party account or cloud backend is
+      used. Some optional features do rely on third-party services: on-device / Google speech
+      recognition for voice search, and external news RSS feeds when you open News. We do not sell
       your personal information.
     </p>
 

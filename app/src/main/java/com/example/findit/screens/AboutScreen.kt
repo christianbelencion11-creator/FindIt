@@ -222,7 +222,7 @@ fun AboutScreen(
                         text = "By using IRemember you agree to use the app lawfully and responsibly. " +
                             "You are responsible for the content you save on your device. " +
                             "The app is provided as-is for personal organization. " +
-                            "Account features rely on Firebase; item storage is local-only. " +
+                            "Your account and all item data are stored locally on your device. " +
                             "See the Privacy Policy for details on data handling.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

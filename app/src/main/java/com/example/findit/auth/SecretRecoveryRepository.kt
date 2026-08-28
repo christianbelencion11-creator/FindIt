@@ -1,20 +1,23 @@
 package com.example.findit.auth
 
-import com.google.firebase.functions.FirebaseFunctions
-import com.google.firebase.functions.FirebaseFunctionsException
-import kotlinx.coroutines.tasks.await
-
+/**
+ * Local secret-based account recovery. Verifies the user's "secret details" against the
+ * on-device [LocalAccountStore] and resets the password/secret there. No network or
+ * Firebase Functions — the [Result] API is kept so the Forgot Password UI is unchanged.
+ */
 class SecretRecoveryRepository(
-    private val functions: FirebaseFunctions = FirebaseFunctions.getInstance()
+    private val store: LocalAccountStore
 ) {
     suspend fun verifySecret(username: String, secret: String): Result {
-        return call(
-            "verifySecret",
-            mapOf(
-                "username" to UsernameAuth.normalizeUsername(username),
-                "secret" to secret
-            )
-        )
+        val normalized = UsernameAuth.normalizeUsername(username)
+        if (store.get(normalized) == null) {
+            return Result.Error("Account not found. Check your username.")
+        }
+        return if (store.verifySecret(normalized, secret)) {
+            Result.Success
+        } else {
+            Result.Error("Incorrect secret details. Please try again.")
+        }
     }
 
     suspend fun resetPasswordWithSecret(
@@ -23,37 +26,18 @@ class SecretRecoveryRepository(
         newPassword: String,
         newSecret: String?
     ): Result {
-        val data = mutableMapOf(
-            "username" to UsernameAuth.normalizeUsername(username),
-            "secret" to secret,
-            "newPassword" to newPassword
-        )
+        val normalized = UsernameAuth.normalizeUsername(username)
+        if (store.get(normalized) == null) {
+            return Result.Error("Account not found. Check your username.")
+        }
+        if (!store.verifySecret(normalized, secret)) {
+            return Result.Error("Incorrect secret details. Please try again.")
+        }
+        store.updatePassword(normalized, newPassword)
         if (!newSecret.isNullOrBlank()) {
-            data["newSecret"] = newSecret
+            store.updateSecret(normalized, newSecret)
         }
-        return call("resetPasswordWithSecret", data)
-    }
-
-    private suspend fun call(functionName: String, data: Map<String, String>): Result {
-        return try {
-            functions.getHttpsCallable(functionName).call(data).await()
-            Result.Success
-        } catch (e: FirebaseFunctionsException) {
-            val message = when (e.code) {
-                FirebaseFunctionsException.Code.NOT_FOUND ->
-                    e.message ?: "Account not found. Check your username."
-                FirebaseFunctionsException.Code.UNAVAILABLE ->
-                    "Service unavailable. Check your internet connection."
-                FirebaseFunctionsException.Code.INVALID_ARGUMENT ->
-                    e.message ?: "Incorrect secret details. Please try again."
-                FirebaseFunctionsException.Code.PERMISSION_DENIED ->
-                    e.message ?: "Incorrect secret details. Please try again."
-                else -> e.message ?: "Could not complete the request. Please try again."
-            }
-            Result.Error(message)
-        } catch (e: Exception) {
-            Result.Error(e.message ?: "Could not complete the request. Please try again.")
-        }
+        return Result.Success
     }
 
     sealed class Result {

@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PostAdd
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,6 +51,7 @@ fun AddSpeedDialMenu(
     onDismiss: () -> Unit,
     onAddItem: () -> Unit,
     onNotes: () -> Unit,
+    onCards: () -> Unit,
     onMicrophone: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -91,6 +93,12 @@ fun AddSpeedDialMenu(
                     label = "Notes",
                     accent = Color(0xFF0D9488),
                     onClick = onNotes
+                )
+                AddMenuAction(
+                    icon = Icons.Outlined.AccountBalanceWallet,
+                    label = "Wallet",
+                    accent = Color(0xFF6366F1),
+                    onClick = onCards
                 )
                 AddMenuAction(
                     icon = Icons.Default.PostAdd,
