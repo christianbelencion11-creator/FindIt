@@ -23,8 +23,13 @@ import com.example.findit.ui.theme.ThemeMode
 import com.example.findit.util.ProfileStore
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        private const val TAG = "MainActivityLifecycle"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        android.util.Log.d(TAG, "onCreate() called")
         enableEdgeToEdge(
             navigationBarStyle = SystemBarStyle.dark(Color.BLACK),
             statusBarStyle = SystemBarStyle.auto(
@@ -87,5 +92,30 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        android.util.Log.d(TAG, "onStart() called")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        android.util.Log.d(TAG, "onResume() called")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        android.util.Log.d(TAG, "onPause() called")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        android.util.Log.d(TAG, "onStop() called")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        android.util.Log.d(TAG, "onDestroy() called")
     }
 }

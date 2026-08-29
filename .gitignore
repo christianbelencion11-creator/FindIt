@@ -14,3 +14,7 @@
 .externalNativeBuild
 local.properties
 *.log
+.claude/
+.cursor/
+.gemini/
+
