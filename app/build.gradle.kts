@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.findit"
+    namespace = "com.example.iremember"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.findit"
+        applicationId = "com.example.iremember"
         minSdk = 24
         targetSdk = 36
         versionCode = 20
