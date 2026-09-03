@@ -86,3 +86,19 @@ Conflicting overloads: fun SearchScreen(...)
    - I-click ang **File > Sync Project with Gradle Files**
    - I-click ang **Build > Clean Project**
    - I-click ang **Build > Rebuild Project**
+
+---
+
+### Error: `Activity class {com.example.findit/com.example.iremember.MainActivity} does not exist`
+
+#### Bakit ito nangyayari?
+Naka-cache pa sa **Run/Debug Configuration** ng Android Studio ang lumang package name na `com.example.findit`, kaya tinatangka nitong i-launch ang Activity sa lumang package sa halip na sa bagong `com.example.iremember`.
+
+#### Paano Ayusin:
+1. **I-sync ang Gradle**: I-click ang **File > Sync Project with Gradle Files** (o ang Elephant icon 🐘 sa toolbar).
+2. **I-reset ang Run Configuration**:
+   - Sa itaas na toolbar sa tabi ng berdeng Play button, i-click ang dropdown (kung saan nakalagay ang `app` o `IRemember`) > piliin ang **Edit Configurations...**
+   - Sa ilalim ng **Android App**, i-select ang configuration at i-click ang `-` (minus) para i-delete ito.
+   - I-click ang `+` > piliin ang **Android App** > pangalanan ng `app` > piliin ang Module na `IRemember.app` > i-click ang **OK**.
+3. **I-uninstall ang lumang app sa device/emulator**: Kung may lumang app na may pangalang "FindIt" sa phone/emulator, i-uninstall ito bago i-run muli.
+4. I-click ang **Run (Shift + F10)**.
